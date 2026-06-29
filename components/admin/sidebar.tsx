@@ -32,7 +32,7 @@ const navigationIcons = {
   Dashboard: LayoutDashboard,
   "Home Page": Home,
   Organization: Users,
-  Cabinets: Target,
+  Kabinet: Target,
   "Berita Acara": Newspaper,
   Settings,
   "Auth Health": ShieldCheck,
@@ -122,7 +122,7 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300",
                   isActive
-                    ? "border border-sidebar-primary/20 bg-sidebar-primary/10 text-sidebar-primary shadow-[0_0_18px_rgba(250,204,21,0.12)]"
+                    ? "border border-sidebar-primary/20 bg-sidebar-primary/10 text-sidebar-primary shadow-[0_0_18px_rgba(245,184,0,0.15)]"
                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 )}
               >

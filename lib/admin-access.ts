@@ -15,7 +15,7 @@ export const adminNavigation: AdminNavItem[] = [
   { name: "Dashboard", href: "/x-panel" },
   { name: "Home Page", href: "/x-panel/home", permissions: ["settings.manage"] },
   { name: "Organization", href: "/x-panel/organization", permissions: ["member.manage", "org_unit.manage"] },
-  { name: "Cabinets", href: "/x-panel/cabinets", permissions: ["settings.manage"] },
+  { name: "Kabinet", href: "/x-panel/cabinets", permissions: ["settings.manage"] },
   { name: "Berita Acara", href: "/x-panel/news", permissions: ["article.create", "article.read_all", "article.edit_own"] },
   { name: "Settings", href: "/x-panel/settings", permissions: ["settings.manage"] },
   { name: "Auth Health", href: "/x-panel/auth-health", permissions: ["settings.manage"] },

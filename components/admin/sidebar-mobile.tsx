@@ -22,7 +22,7 @@ const navigationIcons = {
   Dashboard: LayoutDashboard,
   "Home Page": Home,
   Organization: Users,
-  Cabinets: Target,
+  Kabinet: Target,
   "Berita Acara": Newspaper,
   Settings,
   "Auth Health": ShieldCheck,
