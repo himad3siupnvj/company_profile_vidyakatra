@@ -19,6 +19,7 @@ describe("article versioning", () => {
       authorName: "Tim Media",
       reviewerId: null,
       organizationalUnitId: null,
+      unitName: null,
       divisionId: null,
       periodId: "period-1",
       thumbnailUrl: null,
