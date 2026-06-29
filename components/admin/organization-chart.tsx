@@ -200,7 +200,10 @@ export function OrganizationChart({ members, units }: OrganizationChartProps) {
                     </Badge>
                   </div>
 
-                  <div className={`mt-4 h-1.5 w-12 rounded-full ${unit.color}`} />
+                  <div
+                    className={`mt-4 h-1.5 w-12 rounded-full ${unit.color.startsWith("#") ? "" : unit.color}`}
+                    style={unit.color.startsWith("#") ? { backgroundColor: unit.color } : undefined}
+                  />
                   <h3 className="mt-3 min-h-10 text-sm font-semibold leading-5">
                     {unit.name}
                   </h3>
