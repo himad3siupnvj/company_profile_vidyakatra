@@ -39,8 +39,8 @@ export default function SettingsPage() {
 
   const [quickLinks, setQuickLinks] = useState([
     { id: 1, label: "Beranda", url: "/", enabled: true },
-    { id: 2, label: "Profil", url: "/profil", enabled: true },
-    { id: 3, label: "Struktur Organisasi", url: "/profil#struktur", enabled: true },
+    { id: 2, label: "Profil", url: "/kabinet", enabled: true },
+    { id: 3, label: "Struktur Organisasi", url: "/kabinet#struktur", enabled: true },
     { id: 4, label: "Berita Acara", url: "/berita", enabled: true },
     { id: 5, label: "Kolaborasi", url: "/kontak", enabled: true },
   ])

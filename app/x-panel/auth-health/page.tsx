@@ -141,7 +141,7 @@ export default function AuthHealthPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {(health?.env ?? []).map((item) => (
-              <div key={item.key} className="flex items-center justify-between gap-4 rounded-lg border border-white/10 p-3">
+              <div key={item.key} className="flex items-center justify-between gap-4 rounded-lg border p-3">
                 <div className="min-w-0">
                   <p className="font-medium">{item.label}</p>
                   <p className="truncate text-xs text-muted-foreground">{item.key}</p>
@@ -159,11 +159,11 @@ export default function AuthHealthPage() {
               <CardDescription>Last check: {formatDate(health?.checkedAt ?? null)}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border border-white/10 p-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
                 <span className="text-sm text-muted-foreground">Status</span>
                 <StatusBadge ok={Boolean(health?.database.ok)} />
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-white/10 p-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
                 <span className="text-sm text-muted-foreground">Waktu server</span>
                 <span className="text-sm font-medium">{formatDate(health?.database.serverTime ?? null)}</span>
               </div>

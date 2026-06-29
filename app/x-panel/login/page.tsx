@@ -92,7 +92,7 @@ export default function AdminLoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-md border-white/10 bg-card/95">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <LockKeyhole className="h-5 w-5" />
