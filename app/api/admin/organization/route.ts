@@ -1,7 +1,7 @@
-import { asc, eq, isNull } from "drizzle-orm"
+import { and, asc, eq, isNull, ne } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/db"
-import { divisions, members, organizationalUnits } from "@/db/schema"
+import { divisions, members, organizationalUnits, users } from "@/db/schema"
 import { requireApiPermission } from "@/lib/api-guard"
 import { writeAuditLog } from "@/lib/audit"
 import { getActivePeriodId } from "@/lib/active-period"
@@ -91,9 +91,13 @@ async function resolveOrgUnitId(value: unknown) {
   if (!raw) return null
 
   const db = getDb()
-  const [byId] = await db.select().from(organizationalUnits).where(eq(organizationalUnits.id, raw)).limit(1)
 
-  if (byId) return byId.id
+  try {
+    const [byId] = await db.select().from(organizationalUnits).where(eq(organizationalUnits.id, raw)).limit(1)
+    if (byId) return byId.id
+  } catch {
+    // not a UUID, fall through to name lookup
+  }
 
   const [byName] = await db.select().from(organizationalUnits).where(eq(organizationalUnits.name, raw)).limit(1)
 
@@ -106,9 +110,13 @@ async function resolveDivisionId(value: unknown) {
   if (!raw) return null
 
   const db = getDb()
-  const [byId] = await db.select().from(divisions).where(eq(divisions.id, raw)).limit(1)
 
-  if (byId) return byId.id
+  try {
+    const [byId] = await db.select().from(divisions).where(eq(divisions.id, raw)).limit(1)
+    if (byId) return byId.id
+  } catch {
+    // not a UUID, fall through to name lookup
+  }
 
   const [byName] = await db.select().from(divisions).where(eq(divisions.name, raw)).limit(1)
 
@@ -121,6 +129,14 @@ export async function GET() {
 
   const db = getDb()
   const coreTeamAssets = await getPublicCoreTeamAssets()
+
+  const [adminUser] = await db
+    .select({ memberId: users.memberId })
+    .from(users)
+    .where(eq(users.role, "administrator"))
+    .limit(1)
+  const excludeMemberId = adminUser?.memberId
+
   const orgUnitRows = await db
     .select()
     .from(organizationalUnits)
@@ -159,7 +175,10 @@ export async function GET() {
     .from(members)
     .leftJoin(organizationalUnits, eq(members.organizationalUnitId, organizationalUnits.id))
     .leftJoin(divisions, eq(members.divisionId, divisions.id))
-    .where(isNull(members.deletedAt))
+    .where(and(
+      isNull(members.deletedAt),
+      excludeMemberId ? ne(members.id, excludeMemberId) : undefined,
+    ))
     .orderBy(asc(members.sortOrder), asc(members.id))
 
   const unitSummaries = orgUnitRows.map((unit) => {

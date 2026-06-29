@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData()
   const requestedMemberId = String(formData.get("memberId") ?? "").trim()
+  const skipMember = formData.get("skipMember") === "true"
   const files = formData
     .getAll("files")
     .filter((value): value is File => value instanceof File && value.size > 0)
@@ -69,9 +70,11 @@ export async function POST(request: NextRequest) {
   const unmatched: Array<{ fileName: string; reason: string }> = []
 
   for (const file of files) {
-    const member = requestedMemberId
-      ? memberRows.find((row) => row.id === requestedMemberId) ?? null
-      : findMatchingMember(file.name, memberRows)
+    const member = skipMember
+      ? null
+      : requestedMemberId
+        ? memberRows.find((row) => row.id === requestedMemberId) ?? null
+        : findMatchingMember(file.name, memberRows)
     if (!member) {
       unmatched.push({
         fileName: file.name,
@@ -95,10 +98,12 @@ export async function POST(request: NextRequest) {
       const now = new Date()
 
       await db.transaction(async (tx) => {
-        await tx
-          .update(members)
-          .set({ avatarUrl: url, updatedAt: now })
-          .where(eq(members.id, member.id))
+        if (member) {
+          await tx
+            .update(members)
+            .set({ avatarUrl: url, updatedAt: now })
+            .where(eq(members.id, member.id))
+        }
         await tx.insert(assets).values({
           url,
           fileName: file.name,
@@ -111,8 +116,8 @@ export async function POST(request: NextRequest) {
 
       uploaded.push({
         fileName: file.name,
-        memberId: member.id,
-        memberName: member.name,
+        memberId: member?.id ?? "",
+        memberName: member?.name ?? "(baru)",
         url,
       })
     } catch (error) {
