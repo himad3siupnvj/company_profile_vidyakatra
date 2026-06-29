@@ -59,7 +59,7 @@ export function AdminHeader({ sidebarCollapsed: _sidebarCollapsed }: AdminHeader
 
       {/* Right Section */}
       <div className="flex min-w-0 items-center gap-1 sm:gap-2">
-        <Button asChild variant="outline" size="sm" className="hidden gap-2 border-white/10 bg-white/[0.03] hover:bg-white/[0.06] md:inline-flex">
+        <Button asChild variant="outline" size="sm" className="hidden gap-2 md:inline-flex">
           <Link href="/" target="_blank">
             <ExternalLink className="h-4 w-4" />
             Lihat Situs
