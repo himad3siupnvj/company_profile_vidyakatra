@@ -36,9 +36,13 @@ function createEmptyDashboardSummary(warning?: string) {
         active: 0,
         unclaimed: 0,
       },
+      members: {
+        total: 0,
+      },
     },
     editorialQueue: [],
     reviewQueue: [],
+    rejectedArticles: [],
     recentActivity: [],
     warning,
   }
@@ -102,6 +106,7 @@ export async function GET() {
     statusRows: Array<{ status: ArticleStatus; count: number }>
     unitTotals: { total: number; departments: number; bureaus: number }
     userTotals: { total: number; active: number; unclaimed: number }
+    memberTotals: { total: number }
     recentArticles: Array<{
       id: string
       title: string
@@ -114,6 +119,13 @@ export async function GET() {
       title: string
       status: ArticleStatus
       authorName: string | null
+    }>
+    rejectedArticles: Array<{
+      id: string
+      title: string
+      rejectedNote: string | null
+      authorName: string | null
+      updatedAt: string
     }>
     recentActivities: Array<{
       id: string
@@ -164,6 +176,11 @@ export async function GET() {
             from users
           ) as "userTotals",
           (
+            select json_build_object('total', count(*)::int)
+            from members
+            where deleted_at is null
+          ) as "memberTotals",
+          (
             select coalesce(json_agg(row_to_json(recent_articles)), '[]'::json)
             from (
               select
@@ -193,6 +210,20 @@ export async function GET() {
               limit 5
             ) review_articles
           ) as "reviewArticles",
+          (
+            select coalesce(json_agg(row_to_json(rejected_articles)), '[]'::json)
+            from (
+              select
+                id,
+                title,
+                rejected_note as "rejectedNote",
+                author_name as "authorName",
+                updated_at::text as "updatedAt"
+              from articles
+              where deleted_at is null and status = 'rejected'
+              order by updated_at desc
+            ) rejected_articles
+          ) as "rejectedArticles",
           (
             select coalesce(json_agg(row_to_json(recent_activity)), '[]'::json)
             from (
@@ -224,6 +255,8 @@ export async function GET() {
   const statusRows = result.statusRows
   const unitTotals = result.unitTotals
   const userTotals = result.userTotals
+  const memberTotals = result.memberTotals
+  const rejectedArticles = result.rejectedArticles
   const recentArticles = result.recentArticles
   const reviewArticles = result.reviewArticles
   const recentActivities = result.recentActivities
@@ -238,6 +271,7 @@ export async function GET() {
   const totals = articleTotals ?? { total: 0, views: 0 }
   const units = unitTotals ?? { total: 0, departments: 0, bureaus: 0 }
   const userStats = userTotals ?? { total: 0, active: 0, unclaimed: 0 }
+  const memberStats = memberTotals ?? { total: 0 }
 
   return NextResponse.json({
     stats: {
@@ -256,6 +290,9 @@ export async function GET() {
         active: Number(userStats.active),
         unclaimed: Number(userStats.unclaimed),
       },
+      members: {
+        total: Number(memberStats.total),
+      },
     },
     editorialQueue: recentArticles.map((article) => ({
       id: article.id,
@@ -269,6 +306,13 @@ export async function GET() {
       title: article.title,
       owner: article.authorName ?? "Tim Media",
       status: article.status,
+    })),
+    rejectedArticles: (rejectedArticles ?? []).map((article) => ({
+      id: article.id,
+      title: article.title,
+      rejectedNote: article.rejectedNote,
+      authorName: article.authorName ?? "Tim Media",
+      updatedAt: article.updatedAt,
     })),
     recentActivity: recentActivities.map((activity) => {
       const user = activity.actorName ?? "Admin CMS"
