@@ -25,7 +25,7 @@ import logoKabinet from "@/assets/logoKabinet.png";
 
 const navItems = [
   { href: "/", label: "Beranda" },
-  { href: "/profil", label: "Profil" },
+  { href: "/kabinet", label: "Kabinet" },
   { href: "/berita", label: "Berita Acara" },
 ];
 
@@ -79,8 +79,8 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/45 backdrop-blur-xl supports-[backdrop-filter]:bg-background/25">
-      <div className="mx-auto grid h-14 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 md:px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 md:px-6">
         {/* Logo */}
         <Link href="/" className="group flex min-w-0 items-center gap-2">
           <LogoBadge
@@ -108,7 +108,7 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden min-w-0 items-center justify-end gap-0.5 rounded-full border border-white/10 bg-white/[0.03] px-1.5 py-1 shadow-[0_12px_36px_rgba(0,0,0,0.18)] backdrop-blur-xl md:flex lg:gap-1 lg:px-2">
+        <nav className="hidden min-w-0 items-center justify-end gap-0.5 rounded-full border border-border bg-muted/60 px-1.5 py-1 shadow-sm backdrop-blur-xl md:flex lg:gap-1 lg:px-2">
           {navItems.map((item) => {
             const isActive =
               item.href === "/" ? pathname === "/" : pathname === item.href;
@@ -118,17 +118,14 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsCollaborateOpen(false)}
-                className={cn(
-                  "group relative whitespace-nowrap px-2.5 py-1.5 text-sm font-medium transition-colors duration-200 ease-out lg:px-3 xl:px-4",
-                  isActive
-                    ? "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.55)]"
-                    : "text-[#b8b8b8] hover:text-white",
-                )}
+                  className={cn(
+                    "whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors duration-200 ease-out lg:px-3 xl:px-4",
+                    isActive
+                      ? "bg-primary/10 text-primary shadow-sm"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  )}
               >
                 {item.label}
-                {isActive && (
-                  <span className="absolute bottom-0 left-1/2 h-px w-7 -translate-x-1/2 rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.7)]" />
-                )}
               </Link>
             );
           })}
@@ -136,7 +133,7 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
             <button
               type="button"
               onClick={() => setIsCollaborateOpen((open) => !open)}
-              className="group relative inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 text-sm font-medium text-[#b8b8b8] transition-colors duration-200 ease-out hover:text-white lg:px-3 xl:px-4"
+              className="group relative inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground lg:px-3 xl:px-4"
               aria-expanded={isCollaborateOpen}
             >
               Collaborate
@@ -148,14 +145,14 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
               />
             </button>
             {isCollaborateOpen && (
-              <div className="absolute right-0 top-full mt-3 w-48 overflow-hidden rounded-xl border border-white/10 bg-background/95 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+              <div className="absolute right-0 top-full mt-3 w-48 overflow-hidden rounded-xl border border-border/50 bg-background p-2 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl">
                 {collaborateLinks.map((link) => (
                   <a
                     key={link.label}
                     href={link.href}
                     target={getLinkTarget(link.href)}
                     rel={getLinkRel(link.href)}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#b8b8b8] transition-colors duration-200 hover:bg-white/[0.04] hover:text-yellow-400"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-primary"
                   >
                     <link.icon className="h-4 w-4" />
                     {link.label}
@@ -177,13 +174,13 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[300px] border-l border-white/10 bg-background p-0"
+              className="w-[300px] border-l border-border bg-background p-0"
             >
               <SheetHeader className="sr-only">
                 <SheetTitle>Navigasi publik</SheetTitle>
               </SheetHeader>
               <div className="flex h-full flex-col">
-                <div className="flex items-center justify-between border-b border-white/10 p-4">
+                <div className="flex items-center justify-between border-b border-border p-4">
                   <Link
                     href="/"
                     className="flex min-w-0 items-center gap-3"
@@ -206,7 +203,7 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
                       <span className="block truncate text-sm font-bold tracking-wide">
                         HIMA D3 SI UPNVJ
                       </span>
-                      <span className="block text-xs text-[#b8b8b8]">
+                      <span className="block text-xs text-muted-foreground">
                         Kabinet Vidyakatra
                       </span>
                     </div>
@@ -232,22 +229,19 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
                         key={item.href}
                         href={item.href}
                         onClick={() => setIsOpen(false)}
-                        className={cn(
-                          "group relative px-1 py-3 text-sm font-medium transition-colors duration-200 ease-out",
-                          isActive
-                            ? "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.55)]"
-                            : "text-[#b8b8b8] hover:text-white",
-                        )}
-                      >
-                        {item.label}
-                        {isActive && (
-                          <span className="absolute bottom-1 left-1 h-px w-7 rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.7)]" />
-                        )}
-                      </Link>
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ease-out",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  )}
+                        >
+                          {item.label}
+                        </Link>
                     );
                   })}
-                  <div className="mt-4 border-t border-white/10 pt-4">
-                    <p className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-yellow-400">
+                  <div className="mt-4 border-t border-border pt-4">
+                    <p className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                       Collaborate
                     </p>
                     <div className="mt-2 grid gap-1">
@@ -258,9 +252,9 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
                           target={getLinkTarget(link.href)}
                           rel={getLinkRel(link.href)}
                           onClick={() => setIsOpen(false)}
-                          className="flex items-center gap-3 rounded-lg px-1 py-3 text-sm font-medium text-[#b8b8b8] transition-colors duration-200 hover:text-white"
+                          className="flex items-center gap-3 rounded-lg px-1 py-3 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
                         >
-                          <link.icon className="h-4 w-4 text-yellow-400" />
+                          <link.icon className="h-4 w-4 text-primary" />
                           {link.label}
                         </a>
                       ))}

@@ -8,10 +8,10 @@ import { officialSocialLinks } from "@/lib/social-links"
 import type { getPublicSiteSettings } from "@/lib/public-site-settings"
 
 const organizationLinks = [
-  { href: "/profil#visi-misi", label: "Visi & Misi" },
-  { href: "/profil#struktur", label: "Struktur Organisasi" },
-  { href: "/profil#sejarah", label: "Sejarah" },
-  { href: "/profil#divisi", label: "Divisi" },
+  { href: "/kabinet#visi-misi", label: "Visi & Misi" },
+  { href: "/kabinet#struktur", label: "Struktur Organisasi" },
+  { href: "/kabinet", label: "Kabinet" },
+  { href: "/kabinet#divisi", label: "Divisi" },
 ]
 
 function LogoBadge({
@@ -56,7 +56,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
   ]
 
   return (
-    <footer className="border-t border-border/50 bg-card">
+    <footer className="border-t border-border/50 bg-[#1a1a1a]">
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-8 md:px-6 lg:pb-12 lg:pt-10">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-[1.7fr_0.9fr_0.9fr_1.25fr] lg:gap-5">
           {/* Brand */}
@@ -72,13 +72,13 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                 />
               </div>
               <div className="flex min-w-0 max-w-[18rem] flex-col pt-0.5">
-                <span className="text-sm font-bold leading-snug tracking-wide sm:text-base">HIMA D3 Sistem Informasi UPNVJ</span>
+                <span className="text-sm font-bold leading-snug tracking-wide text-white/90 sm:text-base">HIMA D3 Sistem Informasi UPNVJ</span>
                 <span className="text-xs text-primary">Kabinet Vidyakatra</span>
               </div>
             </Link>
-            <p className="max-w-[19rem] text-sm leading-relaxed text-[#b8b8b8]">
-              Himpunan Mahasiswa D3 Sistem Informasi UPNVJ, wadah pengembangan potensi dan kreativitas mahasiswa dalam bidang teknologi informasi.
-            </p>
+            {/* <p className="max-w-[19rem] text-sm leading-relaxed text-[#b8b8b8] text-justify">
+              Himpunan Mahasiswa D3 Sistem Informasi UPN Veteran Jakarta merupakan wadah pengembangan potensi, kreativitas, kepemimpinan, serta kemampuan komunikasi dan kolaborasi mahasiswa.
+            </p> */}
             {footerSettings.showSocialMedia && <div className="flex gap-2">
               {socialLinks.map((social) => (
                 <a
@@ -86,7 +86,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-muted/50 text-[#b8b8b8] transition-all duration-200 hover:scale-105 hover:border-primary/60 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_18px_rgba(234,179,8,0.22)]"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#b8b8b8] transition-all duration-200 hover:scale-105 hover:border-primary/60 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_18px_rgba(245,184,0,0.22)]"
                   aria-label={social.label}
                 >
                   <social.icon className="h-4 w-4" />
@@ -97,7 +97,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
 
           {/* Quick Links */}
           {footerSettings.showQuickLinks && <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Navigasi</h3>
+            <h3 className="font-semibold text-white/90">Navigasi</h3>
             <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.id}>
@@ -114,7 +114,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
 
           {/* Organization */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Organisasi</h3>
+            <h3 className="font-semibold text-white/90">Organisasi</h3>
             <ul className="space-y-2">
               {organizationLinks.map((link) => (
                 <li key={link.href}>
@@ -131,7 +131,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
 
           {/* Contact */}
           {footerSettings.showContactInfo && <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Kontak</h3>
+            <h3 className="font-semibold text-white/90">Kontak</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-[#b8b8b8]">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

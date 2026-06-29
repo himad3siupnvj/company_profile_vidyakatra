@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Clock, Search, User } from "lucide-react"
+import { Building2, Clock, Search, User } from "lucide-react"
 import type { PublicNews } from "@/lib/public-content"
 
 const categories = [
@@ -102,7 +102,13 @@ export function NewsList({ newsItems }: NewsListProps) {
                       {news.title}
                     </h3>
                     <p className="line-clamp-2 text-sm text-muted-foreground">{news.excerpt}</p>
-                    <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className={"mt-3 flex items-center gap-3 text-xs text-muted-foreground" + (news.unitName ? "" : " hidden")}>
+                      <span className="inline-flex items-center gap-1">
+                        <Building2 className="h-3 w-3" />
+                        {news.unitName}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         {news.author}
