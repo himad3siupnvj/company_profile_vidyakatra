@@ -252,6 +252,7 @@ export const articles = pgTable(
     thumbnailAlt: text("thumbnail_alt"),
     seoTitle: varchar("seo_title", { length: 220 }),
     seoDescription: text("seo_description"),
+    unitName: text("unit_name"),
     canonicalUrl: text("canonical_url"),
     ogImageUrl: text("og_image_url"),
     readTime: varchar("read_time", { length: 40 }),
