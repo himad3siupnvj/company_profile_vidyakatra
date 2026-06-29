@@ -36,7 +36,7 @@ export const getPublicWorkUnits = unstable_cache(
           type: unit.type === "bureau" ? "Biro" : "Departemen",
           name: unit.name,
           description: unit.description ?? fallback.description,
-          logo: unit.imageUrl || "/placeholder-logo.svg",
+          logo: unit.imageUrl || fallback.logo || "/placeholder-logo.svg",
           programs: unit.workPrograms.map((program) => program.name),
           members: mappedMembers.length ? mappedMembers : fallback.members,
           workPrograms: unit.workPrograms,

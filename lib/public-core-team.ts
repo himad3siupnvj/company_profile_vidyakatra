@@ -2,30 +2,13 @@ import { getPublicCoreTeamAssets } from "@/lib/core-team-assets"
 
 const coreTeamDefinitions = [
   {
-    slug: "sekretaris",
+    slug: "sekben",
     type: "Pengurus Inti",
-    name: "Sekretaris",
+    name: "Sekretaris & Bendahara",
     description:
-      "Mengelola administrasi, surat-menyurat, notulensi, dan kerapian dokumen organisasi.",
-    programs: ["Surat Menyurat", "Notulensi", "Arsip Kabinet"],
-    responsibilities: [
-      "Menjaga tata kelola surat masuk dan surat keluar organisasi.",
-      "Menyusun notulensi rapat serta mendistribusikan hasil keputusan.",
-      "Mengelola arsip dan dokumen kabinet secara tertib.",
-    ],
-  },
-  {
-    slug: "bendahara",
-    type: "Pengurus Inti",
-    name: "Bendahara",
-    description:
-      "Mengatur pencatatan keuangan, perencanaan anggaran, dan transparansi kebutuhan dana kegiatan.",
-    programs: ["Anggaran", "Laporan Keuangan", "Kas Kegiatan"],
-    responsibilities: [
-      "Menyusun perencanaan anggaran kabinet dan kegiatan.",
-      "Mencatat pemasukan serta pengeluaran secara transparan.",
-      "Menyiapkan laporan dan evaluasi keuangan organisasi.",
-    ],
+      "Mengelola administrasi, persuratan, notulensi, serta mengatur pencatatan keuangan dan perencanaan anggaran organisasi.",
+    programs: ["Administrasi", "Arsip", "Keuangan", "Anggaran"],
+    responsibilities: [],
   },
   {
     slug: "koordinator",

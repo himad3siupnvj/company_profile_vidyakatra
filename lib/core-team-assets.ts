@@ -9,14 +9,12 @@ import sekbenLogo from "@/assets/organ/sekben.png"
 export const coreTeamAssetsKey = "organizationCoreTeamAssets"
 
 export type CoreTeamAssets = {
-  sekretaris: string
-  bendahara: string
+  sekben: string
   koordinator: string
 }
 
 export const defaultCoreTeamAssets: CoreTeamAssets = {
-  sekretaris: sekbenLogo.src,
-  bendahara: sekbenLogo.src,
+  sekben: sekbenLogo.src,
   koordinator: koordinatorLogo.src,
 }
 
@@ -27,14 +25,14 @@ export function normalizeCoreTeamAssets(value: unknown): CoreTeamAssets {
 
   const record = value as Record<string, unknown>
   return {
-    sekretaris:
-      typeof record.sekretaris === "string"
+    sekben:
+      typeof record.sekben === "string"
+        ? record.sekben
+        : typeof record.sekretaris === "string"
         ? record.sekretaris
-        : defaultCoreTeamAssets.sekretaris,
-    bendahara:
-      typeof record.bendahara === "string"
+        : typeof record.bendahara === "string"
         ? record.bendahara
-        : defaultCoreTeamAssets.bendahara,
+        : defaultCoreTeamAssets.sekben,
     koordinator:
       typeof record.koordinator === "string"
         ? record.koordinator

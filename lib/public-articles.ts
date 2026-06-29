@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm"
+import { and, desc, eq, isNull, sql } from "drizzle-orm"
 import { unstable_cache } from "next/cache"
 import { getDb } from "@/db"
 import { articleCategories, articles, periods } from "@/db/schema"
@@ -47,6 +47,7 @@ async function getPublishedArticleRows(slug?: string) {
       thumbnailUrl: articles.thumbnailUrl,
       readTime: articles.readTime,
       isFeatured: articles.isFeatured,
+      unitName: articles.unitName,
     })
     .from(articles)
     .innerJoin(periods, eq(articles.periodId, periods.id))
@@ -74,6 +75,7 @@ function serializePublicArticle(row: Awaited<ReturnType<typeof getPublishedArtic
     category: category === "kegiatan" || category === "pengumuman" || category === "prestasi" ? category : "berita",
     image: row.thumbnailUrl ?? "/news/default.jpg",
     featured: row.isFeatured,
+    unitName: row.unitName ?? "",
   }
 }
 
@@ -117,6 +119,13 @@ export async function getPublicNews() {
 }
 
 export async function getPublicNewsBySlug(slug: string) {
+  try {
+    const db = getDb()
+    await db.update(articles).set({ views: sql`${articles.views} + 1` }).where(and(eq(articles.slug, slug), eq(articles.status, "published"), isNull(articles.deletedAt)))
+  } catch {
+    // Silently fail — view count is not critical
+  }
+
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
     try {
       const rows = await getPublishedArticleRows(slug)

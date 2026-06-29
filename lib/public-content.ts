@@ -2,8 +2,8 @@ import type { StaticImageData } from "next/image"
 import type { ArticleDocument } from "@/lib/article-content"
 import ekrafLogo from "@/assets/organ/ekraf.png"
 import humsiwaLogo from "@/assets/organ/humsiwa.png"
-import ketuaLead from "@/assets/lead/Sakhaa_BPH_Final.jpg"
-import wakilLead from "@/assets/lead/Latanza_BPH.jpg"
+import ketuaLead from "@/assets/lead/sakha-ketum1.png"
+import wakilLead from "@/assets/lead/latanza-waketum.png"
 import medkomLogo from "@/assets/organ/medkom.png"
 import pendidikanLogo from "@/assets/organ/pendidikan.png"
 import psdmLogo from "@/assets/organ/psdm.png"
@@ -22,6 +22,7 @@ export type PublicNews = {
   category: "berita" | "kegiatan" | "pengumuman" | "prestasi"
   image: string
   featured: boolean
+  unitName: string
 }
 
 export const newsData: PublicNews[] = [
@@ -42,6 +43,7 @@ export const newsData: PublicNews[] = [
     category: "kegiatan",
     image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1200&h=800&fit=crop",
     featured: true,
+    unitName: "Departemen Media dan Komunikasi",
   },
   {
     id: 2,
@@ -60,6 +62,7 @@ export const newsData: PublicNews[] = [
     category: "kegiatan",
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=800&fit=crop",
     featured: true,
+    unitName: "",
   },
   {
     id: 3,
@@ -78,6 +81,7 @@ export const newsData: PublicNews[] = [
     category: "kegiatan",
     image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&h=800&fit=crop",
     featured: false,
+    unitName: "",
   },
   {
     id: 4,
@@ -96,6 +100,7 @@ export const newsData: PublicNews[] = [
     category: "prestasi",
     image: "https://images.unsplash.com/photo-1496469888073-80de7e952517?w=1200&h=800&fit=crop",
     featured: false,
+    unitName: "",
   },
   {
     id: 5,
@@ -114,6 +119,7 @@ export const newsData: PublicNews[] = [
     category: "pengumuman",
     image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&h=800&fit=crop",
     featured: false,
+    unitName: "",
   },
   {
     id: 6,
@@ -132,6 +138,7 @@ export const newsData: PublicNews[] = [
     category: "kegiatan",
     image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&h=800&fit=crop",
     featured: false,
+    unitName: "",
   },
   {
     id: 7,
@@ -150,6 +157,7 @@ export const newsData: PublicNews[] = [
     category: "berita",
     image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=800&fit=crop",
     featured: false,
+    unitName: "",
   },
   {
     id: 8,
@@ -168,6 +176,7 @@ export const newsData: PublicNews[] = [
     category: "prestasi",
     image: "https://images.unsplash.com/photo-1531545514256-b1400bc00f31?w=1200&h=800&fit=crop",
     featured: false,
+    unitName: "",
   },
 ]
 
@@ -255,9 +264,9 @@ export const workUnits: WorkUnit[] = [
     ],
   },
   {
-    slug: "pengembangan-sumber-daya-mahasiswa",
+    slug: "pengembangan-sumber-daya-manusia",
     type: "Departemen",
-    name: "Pengembangan Sumber Daya Mahasiswa",
+    name: "Pengembangan Sumber Daya Manusia",
     description: "Mengembangkan kapasitas anggota, kaderisasi, dan budaya organisasi yang sehat.",
     logo: psdmLogo,
     programs: ["Kaderisasi", "Upgrading", "Evaluasi Kabinet"],
