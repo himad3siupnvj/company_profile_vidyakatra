@@ -121,12 +121,12 @@ export default function CabinetsManagement() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Kabinet</h1>
           <p className="text-muted-foreground">
-            Kelola intro kabinet, filosofi, visi, misi, values, dan pengurus inti untuk halaman /profil.
+            Kelola intro kabinet, filosofi, visi, misi, values, dan pengurus inti untuk halaman profil kabinet.
           </p>
         </div>
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Button asChild variant="outline" className="gap-2">
-            <a href="/profil" target="_blank" rel="noopener noreferrer">
+            <a href="/kabinet" target="_blank" rel="noopener noreferrer">
               <Eye className="h-4 w-4" />
               Preview
             </a>
