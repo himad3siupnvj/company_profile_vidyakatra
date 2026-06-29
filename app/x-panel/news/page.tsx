@@ -1,7 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Archive, CheckCircle2, Edit, Eye, FileText, History, ImagePlus, Info, Loader2, Monitor, MoreHorizontal, PenLine, Plus, RotateCcw, Search, Send, Trash2, Upload, XCircle } from "lucide-react"
+import { AlertCircle, Archive, CheckCircle2, Edit, Eye, FileText, History, ImagePlus, Info, Loader2, Monitor, MoreHorizontal, PenLine, Plus, RotateCcw, Search, Send, Trash2, Upload, XCircle } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -72,6 +83,10 @@ interface Article {
   featured: boolean
   views: number
   content?: ArticleDocument
+  organizationalUnitId: string | null
+  unitName: string | null
+  deletedAt: string | null
+  rejectedNote: string | null
 }
 
 interface ArticleVersion {
@@ -125,6 +140,9 @@ export default function ArticleManagementPage() {
   const [isLoadingArticles, setIsLoadingArticles] = useState(true)
   const [isCreateArticleOpen, setIsCreateArticleOpen] = useState(false)
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null)
+  const [orgUnitDropdown, setOrgUnitDropdown] = useState("")
+  const [customUnitName, setCustomUnitName] = useState("")
+
   const [newArticle, setNewArticle] = useState({
     title: "",
     excerpt: "",
@@ -133,6 +151,8 @@ export default function ArticleManagementPage() {
     thumbnailUrl: "",
     thumbnailAlt: "",
     featured: false,
+    organizationalUnitId: null as string | null,
+    unitName: null as string | null,
   })
   const [articleContent, setArticleContent] = useState<ArticleDocument>(createEmptyArticleDocument())
   const [updatingArticleId, setUpdatingArticleId] = useState<string | null>(null)
@@ -143,6 +163,10 @@ export default function ArticleManagementPage() {
   const [historyArticle, setHistoryArticle] = useState<Article | null>(null)
   const [articleVersions, setArticleVersions] = useState<ArticleVersion[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [orgUnits, setOrgUnits] = useState<{ id: string; name: string; type: string }[]>([])
+  const [deleteArticleId, setDeleteArticleId] = useState<string | null>(null)
+  const [rejectArticle, setRejectArticle] = useState<Article | null>(null)
+  const [rejectNote, setRejectNote] = useState("")
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -153,48 +177,57 @@ export default function ArticleManagementPage() {
   }, [])
 
   useEffect(() => {
-    async function loadArticles() {
-      setIsLoadingArticles(true)
-      setErrorMessage("")
-      const controller = new AbortController()
-      const timeoutId = window.setTimeout(() => controller.abort(), articlesRequestTimeoutMs)
-
-      try {
-        const response = await fetch("/api/admin/articles?page=1&limit=50", {
-          cache: "no-store",
-          signal: controller.signal,
-        })
-        const data = await response.json().catch(() => null)
-
-        if (!response.ok) {
-          setErrorMessage(data?.error ?? "Artikel gagal dimuat.")
-          return
-        }
-
-        setArticles(data.articles)
-        setNextArticlePage(data.pagination?.hasMore ? 2 : null)
-      } catch (error) {
-        setErrorMessage(
-          error instanceof DOMException && error.name === "AbortError"
-            ? "Artikel belum bisa dimuat. Koneksi database terlalu lama merespons."
-            : "Artikel gagal dimuat. Coba refresh halaman.",
-        )
-      } finally {
-        window.clearTimeout(timeoutId)
-        setIsLoadingArticles(false)
-      }
-    }
-
-    loadArticles()
+    fetch("/api/admin/organizational-units", { cache: "no-store" })
+      .then((res) => res.json())
+      .then(setOrgUnits)
+      .catch(() => {})
   }, [])
+
+  async function loadArticles(showDeleted = false) {
+    setIsLoadingArticles(true)
+    setErrorMessage("")
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), articlesRequestTimeoutMs)
+
+    try {
+      const url = `/api/admin/articles?page=1&limit=50${showDeleted ? "&showDeleted=true" : ""}`
+      const response = await fetch(url, {
+        cache: "no-store",
+        signal: controller.signal,
+      })
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        setErrorMessage(data?.error ?? "Artikel gagal dimuat.")
+        return
+      }
+
+      setArticles(data.articles)
+      setNextArticlePage(data.pagination?.hasMore ? 2 : null)
+    } catch (error) {
+      setErrorMessage(
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Artikel belum bisa dimuat. Koneksi database terlalu lama merespons."
+          : "Artikel gagal dimuat. Coba refresh halaman.",
+      )
+    } finally {
+      window.clearTimeout(timeoutId)
+      setIsLoadingArticles(false)
+    }
+  }
+
+  useEffect(() => {
+    loadArticles(filterStatus === "trash")
+  }, [filterStatus])
 
   const handleLoadMoreArticles = async () => {
     if (!nextArticlePage || isLoadingMore) return
 
     setIsLoadingMore(true)
+    const showDeleted = filterStatus === "trash"
 
     try {
-      const response = await fetch(`/api/admin/articles?page=${nextArticlePage}&limit=50`, {
+      const response = await fetch(`/api/admin/articles?page=${nextArticlePage}&limit=50${showDeleted ? "&showDeleted=true" : ""}`, {
         cache: "no-store",
       })
       const data = await response.json().catch(() => null)
@@ -220,14 +253,19 @@ export default function ArticleManagementPage() {
     const matchesSearch =
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = filterStatus === "all" || article.status === filterStatus
+    const matchesStatus =
+      filterStatus === "all" || filterStatus === "trash"
+        ? true
+        : article.status === filterStatus
 
     return matchesSearch && matchesStatus
   })
 
   const resetArticleForm = () => {
     setEditingArticleId(null)
-    setNewArticle({ title: "", excerpt: "", category: "", author: "Tim Media", thumbnailUrl: "", thumbnailAlt: "", featured: false })
+    setNewArticle({ title: "", excerpt: "", category: "", author: "Tim Media", thumbnailUrl: "", thumbnailAlt: "", featured: false, organizationalUnitId: null, unitName: null })
+    setOrgUnitDropdown("")
+    setCustomUnitName("")
     setArticleContent(createEmptyArticleDocument())
   }
 
@@ -241,6 +279,7 @@ export default function ArticleManagementPage() {
 
   const handleEditArticle = (article: Article) => {
     setEditingArticleId(article.id)
+    const unitId = article.organizationalUnitId ?? null
     setNewArticle({
       title: article.title,
       excerpt: article.excerpt,
@@ -249,7 +288,19 @@ export default function ArticleManagementPage() {
       thumbnailUrl: article.thumbnail === "/news/default.jpg" ? "" : article.thumbnail,
       thumbnailAlt: article.thumbnailAlt,
       featured: article.featured,
+      organizationalUnitId: unitId,
+      unitName: article.unitName ?? null,
     })
+    if (unitId) {
+      setOrgUnitDropdown(unitId)
+      setCustomUnitName("")
+    } else if (article.unitName) {
+      setOrgUnitDropdown("other")
+      setCustomUnitName(article.unitName)
+    } else {
+      setOrgUnitDropdown("")
+      setCustomUnitName("")
+    }
     setArticleContent(article.content ?? createEmptyArticleDocument())
     setIsCreateArticleOpen(true)
   }
@@ -269,6 +320,10 @@ export default function ArticleManagementPage() {
         body: JSON.stringify({
           id: editingArticleId,
           ...newArticle,
+          organizationalUnitId: orgUnitDropdown === "other" ? null : orgUnitDropdown || null,
+          unitName: orgUnitDropdown === "other"
+            ? customUnitName.trim() || null
+            : orgUnits.find((u) => u.id === orgUnitDropdown)?.name || null,
           readTime,
           content: articleContent,
         }),
@@ -383,13 +438,14 @@ export default function ArticleManagementPage() {
     }
   }
 
-  const handleWorkflowAction = async (article: Article, action: ArticleWorkflowAction) => {
-    const rejectedNote =
-      action === "reject"
-        ? window.prompt("Catatan revisi untuk penulis")
-        : null
+  const confirmDeleteArticle = (id: string) => {
+    setDeleteArticleId(id)
+  }
 
-    if (action === "reject" && !rejectedNote?.trim()) {
+  const handleWorkflowAction = async (article: Article, action: ArticleWorkflowAction) => {
+    if (action === "reject") {
+      setRejectArticle(article)
+      setRejectNote("")
       return
     }
 
@@ -402,7 +458,6 @@ export default function ArticleManagementPage() {
         body: JSON.stringify({
           id: article.id,
           action,
-          rejectedNote,
         }),
       })
 
@@ -420,6 +475,72 @@ export default function ArticleManagementPage() {
       )
     } catch {
       setErrorMessage("Workflow article gagal diproses. Coba lagi sebentar.")
+    } finally {
+      setUpdatingArticleId(null)
+    }
+  }
+
+  const handleRestoreArticle = async (id: string) => {
+    setUpdatingArticleId(id)
+
+    try {
+      const response = await fetch("/api/admin/articles/status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action: "restore" }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        setErrorMessage(data?.error ?? "Gagal memulihkan artikel.")
+        return
+      }
+
+      const data = await response.json()
+      setArticles((currentArticles) =>
+        currentArticles.map((currentArticle) =>
+          currentArticle.id === id ? { ...data.article, deletedAt: null } : currentArticle,
+        ),
+      )
+    } catch {
+      setErrorMessage("Gagal memulihkan artikel. Coba lagi sebentar.")
+    } finally {
+      setUpdatingArticleId(null)
+    }
+  }
+
+  const handleConfirmReject = async () => {
+    if (!rejectArticle || !rejectNote.trim()) return
+
+    const article = rejectArticle
+    setRejectArticle(null)
+    setUpdatingArticleId(article.id)
+
+    try {
+      const response = await fetch("/api/admin/articles/status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: article.id,
+          action: "reject",
+          rejectedNote: rejectNote.trim(),
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        setErrorMessage(data?.error ?? "Gagal menolak artikel.")
+        return
+      }
+
+      const data = await response.json()
+      setArticles((currentArticles) =>
+        currentArticles.map((currentArticle) =>
+          currentArticle.id === article.id ? data.article : currentArticle,
+        ),
+      )
+    } catch {
+      setErrorMessage("Gagal menolak artikel. Coba lagi sebentar.")
     } finally {
       setUpdatingArticleId(null)
     }
@@ -465,6 +586,8 @@ export default function ArticleManagementPage() {
     return colors[status]
   }
 
+  const isTrashView = filterStatus === "trash"
+
   return (
     <div className="space-y-6">
       <Dialog open={Boolean(previewArticle)} onOpenChange={(open) => !open && setPreviewArticle(null)}>
@@ -498,6 +621,61 @@ export default function ArticleManagementPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={Boolean(deleteArticleId)} onOpenChange={(open) => !open && setDeleteArticleId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Artikel?</AlertDialogTitle>
+
+            <AlertDialogDescription>
+              Artikel akan disembunyikan dari publikasi. Tindakan ini bisa dibatalkan oleh administrator.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteArticleId) handleDeleteArticle(deleteArticleId)
+                setDeleteArticleId(null)
+              }}
+            >
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={Boolean(rejectArticle)} onOpenChange={(open) => !open && setRejectArticle(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tolak Artikel</AlertDialogTitle>
+            <AlertDialogDescription>
+              Berikan catatan revisi untuk penulis artikel "{rejectArticle?.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reject-note">Catatan Revisi</Label>
+            <Textarea
+              id="reject-note"
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder="Jelaskan apa yang perlu diperbaiki..."
+              className="min-h-[100px]"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={!rejectNote.trim()}
+              onClick={handleConfirmReject}
+            >
+              Tolak
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={Boolean(historyArticle)} onOpenChange={(open) => !open && setHistoryArticle(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
@@ -563,7 +741,7 @@ export default function ArticleManagementPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Terbit</p>
-              {isLoadingArticles ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold">{articles.filter((article) => article.status === "published").length}</p>}
+              {isLoadingArticles ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold">{articles.filter((article) => article.status === "published" && !article.deletedAt).length}</p>}
             </div>
           </CardContent>
         </Card>
@@ -574,7 +752,7 @@ export default function ArticleManagementPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Diajukan</p>
-              {isLoadingArticles ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold">{articles.filter((article) => article.status === "submitted").length}</p>}
+              {isLoadingArticles ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold">{articles.filter((article) => article.status === "submitted" && !article.deletedAt).length}</p>}
             </div>
           </CardContent>
         </Card>
@@ -585,7 +763,7 @@ export default function ArticleManagementPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Draf</p>
-              {isLoadingArticles ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold">{articles.filter((article) => article.status === "draft").length}</p>}
+              {isLoadingArticles ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold">{articles.filter((article) => article.status === "draft" && !article.deletedAt).length}</p>}
             </div>
           </CardContent>
         </Card>
@@ -627,7 +805,8 @@ export default function ArticleManagementPage() {
                 <SelectItem value="rejected">Ditolak</SelectItem>
                 <SelectItem value="published">Terbit</SelectItem>
                 <SelectItem value="archived">Diarsipkan</SelectItem>
-              </SelectContent>
+                <SelectItem value="trash">Sampah</SelectItem>
+                </SelectContent>
             </Select>
             <Dialog open={isCreateArticleOpen} onOpenChange={handleDialogOpenChange}>
               <DialogTrigger asChild>
@@ -686,20 +865,36 @@ export default function ArticleManagementPage() {
                           </Select>
                         </div>
                         <div className="space-y-2">
+                          <Label htmlFor="article-unit">Biro / Departemen</Label>
+                          <Select value={orgUnitDropdown} onValueChange={setOrgUnitDropdown}>
+                            <SelectTrigger id="article-unit">
+                              <SelectValue placeholder="Pilih unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {orgUnits.map((unit) => (
+                                <SelectItem key={unit.id} value={unit.id}>
+                                  {unit.name}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="other">Other (Custom)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {orgUnitDropdown === "other" && (
+                            <Input
+                              value={customUnitName}
+                              onChange={(e) => setCustomUnitName(e.target.value)}
+                              placeholder="Nama unit kustom..."
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
                           <Label>Estimasi Waktu Baca</Label>
                           <Input value={getArticleReadTime(articleContent)} readOnly className="bg-muted/50" />
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="article-excerpt">Ringkasan</Label>
-                        <Textarea
-                          id="article-excerpt"
-                          value={newArticle.excerpt}
-                          onChange={(event) => setNewArticle({ ...newArticle, excerpt: event.target.value })}
-                          placeholder="Ringkasan pendek untuk card berita..."
-                          rows={2}
-                        />
-                      </div>
+
                     </div>
                   </div>
 
@@ -834,7 +1029,8 @@ export default function ArticleManagementPage() {
         </CardHeader>
         <CardContent>
           {errorMessage && (
-            <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <div className="sticky top-0 z-10 mb-4 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-sm">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               {errorMessage}
             </div>
           )}
@@ -842,13 +1038,14 @@ export default function ArticleManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Artikel</TableHead>
+                <TableHead>Artikel</TableHead>
                   <TableHead>Kategori</TableHead>
                   <TableHead>Penulis</TableHead>
+                  <TableHead>Unit</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Dilihat</TableHead>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead className="w-12"></TableHead>
+                  <TableHead>{filterStatus === "trash" ? "Dihapus" : "Tanggal"}</TableHead>
+                  <TableHead className="sticky right-0 w-12 bg-background"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -857,20 +1054,24 @@ export default function ArticleManagementPage() {
                     <TableCell><Skeleton className="h-12 w-full" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-12" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                   </TableRow>
-                )) : filteredArticles.map((article) => (
-                  <TableRow key={article.id} className={updatingArticleId === article.id ? "opacity-60" : undefined}>
+                )) : filteredArticles.map((article) => {
+                  const itemIsTrashed = Boolean(article.deletedAt)
+
+                  return (
+                  <TableRow key={article.id} className={`${updatingArticleId === article.id ? "opacity-60" : ""} ${itemIsTrashed ? "opacity-60" : ""}`}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-16 overflow-hidden rounded bg-muted">
                           {article.thumbnail && <img src={article.thumbnail} alt={article.thumbnailAlt} className="h-full w-full object-cover" />}
                         </div>
                         <div>
-                          <p className="font-medium">{article.title}</p>
+                          <p className={`font-medium ${itemIsTrashed ? "line-through text-muted-foreground" : ""}`}>{article.title}</p>
                           <p className="line-clamp-1 text-xs text-muted-foreground">{article.excerpt}</p>
                         </div>
                       </div>
@@ -879,14 +1080,26 @@ export default function ArticleManagementPage() {
                       <Badge variant="secondary">{article.categoryLabel ?? article.category}</Badge>
                     </TableCell>
                     <TableCell>{article.author}</TableCell>
+                    <TableCell className="text-sm">
+                      {article.unitName || (article.organizationalUnitId ? orgUnits.find((u) => u.id === article.organizationalUnitId)?.name : null) || <span className="text-muted-foreground/40">&mdash;</span>}
+                    </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(article.status)}>{article.status}</Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge className={getStatusColor(article.status)}>{article.status}</Badge>
+                        {article.status === "rejected" && article.rejectedNote && (
+                          <p className="max-w-[200px] truncate text-xs text-muted-foreground" title={article.rejectedNote}>
+                            {article.rejectedNote}
+                          </p>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>{article.views.toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {article.publishedAt || article.createdAt}
+                      {itemIsTrashed
+                        ? new Date(article.deletedAt!).toLocaleDateString("id-ID")
+                        : article.publishedAt || article.createdAt}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="sticky right-0 bg-background">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" aria-label={`Aksi untuk ${article.title}`}>
@@ -894,6 +1107,31 @@ export default function ArticleManagementPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {itemIsTrashed ? (
+                            <DropdownMenuItem
+                              onClick={() => handleRestoreArticle(article.id)}
+                              disabled={updatingArticleId === article.id}
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Pulihkan
+                            </DropdownMenuItem>
+                          ) : (
+                            <>
+                          <DropdownMenuItem
+                            onClick={() => handleEditArticle(article)}
+                            disabled={article.status !== "draft" && article.status !== "rejected" && article.status !== "published"}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setPreviewArticle(article)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleOpenHistory(article)}>
+                            <History className="mr-2 h-4 w-4" />
+                            History
+                          </DropdownMenuItem>
                           {getArticleWorkflowActions(article.status)
                             .filter((action) =>
                               Boolean(
@@ -915,41 +1153,31 @@ export default function ArticleManagementPage() {
                               </DropdownMenuItem>
                             )
                             })}
-                          <DropdownMenuItem onClick={() => setPreviewArticle(article)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleOpenHistory(article)}>
-                            <History className="mr-2 h-4 w-4" />
-                            History
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleEditArticle(article)}
-                            disabled={article.status !== "draft" && article.status !== "rejected"}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
                           {currentUser && hasPermission(currentUser.role, "article.delete") && (
                             <DropdownMenuItem
                               className="text-destructive"
-                              onClick={() => handleDeleteArticle(article.id)}
+                              onClick={() => confirmDeleteArticle(article.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
                           )}
+                          </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
                 {!isLoadingArticles && filteredArticles.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7}>
+                    <TableCell colSpan={8}>
                       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-                        {articles.length === 0
+                        {articles.length === 0 && !isTrashView
                           ? "Belum ada artikel di database. Buat draft baru atau generate dari PDF/DOCX."
+                          : articles.length === 0 && isTrashView
+                          ? "Tidak ada artikel yang dihapus."
                           : "Tidak ada artikel yang cocok dengan filter saat ini."}
                       </div>
                     </TableCell>
