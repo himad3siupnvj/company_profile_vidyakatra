@@ -1,6 +1,6 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import { Calendar, Clock, FileText, User } from "lucide-react"
+import { Building2, Calendar, Clock, FileText, User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ArticleBackButton } from "@/components/public/article-back-button"
 import { ArticleDocumentRenderer } from "@/components/public/article-document-renderer"
@@ -47,13 +47,14 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   const categoryLabel = categoryLabels[news.category] ?? "Berita Acara"
   const metaItems = [
     { label: "Tanggal", value: news.date, icon: Calendar },
+    ...(news.unitName ? [{ label: "Unit", value: news.unitName, icon: Building2 }] : []),
     { label: "Penulis", value: news.author, icon: User },
     { label: "Waktu baca", value: news.readTime, icon: Clock },
   ]
 
   return (
     <article className="bg-background">
-      <section className="relative overflow-hidden border-b border-border/50 bg-card/20 py-10 md:py-14">
+      <section className="relative overflow-hidden border-b border-border bg-muted/40 py-10 md:py-14">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.18)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.18)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
         <div className="relative mx-auto max-w-6xl px-4 md:px-6">
@@ -89,16 +90,14 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
                 </span>
               ))}
             </div>
-            <p className="mx-auto mt-6 max-w-3xl text-justify text-lg leading-8 text-muted-foreground md:text-xl">
-              {news.excerpt}
-            </p>
+
           </div>
         </div>
       </section>
 
       <section className="py-8 md:py-12">
         <div className="mx-auto max-w-5xl px-4 md:px-6">
-          <figure className="mx-auto max-w-3xl overflow-hidden rounded-md border border-border/50 bg-card/60 shadow-[0_18px_54px_rgba(0,0,0,0.22)]">
+          <figure className="mx-auto max-w-3xl overflow-hidden rounded-md border border-border bg-muted/50 shadow-lg shadow-black/5">
             <Image
               src={news.image}
               alt={news.title}
@@ -107,12 +106,12 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
               className="aspect-[16/9] w-full object-cover"
               priority
             />
-            <figcaption className="border-t border-border/50 bg-card/80 px-4 py-3 text-center text-sm text-muted-foreground">
+            <figcaption className="border-t border-border bg-card px-4 py-3 text-center text-sm text-muted-foreground">
               Dokumentasi publikasi: {news.title}
             </figcaption>
           </figure>
 
-          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-border/50 bg-card/50 px-5 py-7 shadow-[0_18px_70px_rgba(0,0,0,0.16)] md:px-8 md:py-10">
+          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-border bg-card px-5 py-7 shadow-lg shadow-black/5 md:px-8 md:py-10">
             <ArticleDocumentRenderer document={document} />
           </div>
         </div>
