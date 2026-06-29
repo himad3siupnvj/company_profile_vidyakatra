@@ -45,37 +45,26 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
 }
 
 function ensureLegacyPdfDom() {
-  const globals = globalThis as unknown as { document?: unknown; Image?: unknown }
+  if (!isPdfBlobCaptureInstalled) {
+    const createObjectURL = URL.createObjectURL.bind(URL)
+    const revokeObjectURL = URL.revokeObjectURL.bind(URL)
 
-  if (!globals.document) {
-    globals.document = {
-      fonts: {
-        add: () => undefined,
-        delete: () => undefined,
-      },
+    URL.createObjectURL = (blob) => {
+      const url = createObjectURL(blob)
+      if (blob instanceof Blob) {
+        pdfImageBlobs.set(url, blob)
+      }
+      return url
     }
+    URL.revokeObjectURL = (url) => {
+      pdfImageBlobs.delete(url)
+      revokeObjectURL(url)
+    }
+    isPdfBlobCaptureInstalled = true
   }
 
-  if (!globals.Image) {
-    if (!isPdfBlobCaptureInstalled) {
-      const createObjectURL = URL.createObjectURL.bind(URL)
-      const revokeObjectURL = URL.revokeObjectURL.bind(URL)
-
-      URL.createObjectURL = (blob) => {
-        const url = createObjectURL(blob)
-        if (blob instanceof Blob) {
-          pdfImageBlobs.set(url, blob)
-        }
-        return url
-      }
-      URL.revokeObjectURL = (url) => {
-        pdfImageBlobs.delete(url)
-        revokeObjectURL(url)
-      }
-      isPdfBlobCaptureInstalled = true
-    }
-
-    globals.Image = class ServerPdfImage {
+  if (!(globalThis as any).Image?.prototype?.kind) {
+    ;(globalThis as any).Image = class ServerPdfImage {
       onload: (() => void) | null = null
       onerror: (() => void) | null = null
       width = 0

@@ -35,6 +35,7 @@ function serializeArticle(row: {
   readTime: string | null
   isFeatured: boolean
   views: number
+  rejectedNote: string | null
 }) {
   return {
     id: row.id,
@@ -54,6 +55,7 @@ function serializeArticle(row: {
     readTime: row.readTime ?? "3 min",
     featured: row.isFeatured,
     views: row.views,
+    rejectedNote: row.rejectedNote ?? null,
   }
 }
 

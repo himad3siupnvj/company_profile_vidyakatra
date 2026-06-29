@@ -1,4 +1,4 @@
-import { and, count, desc, eq, isNull } from "drizzle-orm"
+import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/db"
 import { articleCategories, articles, auditLogs, users } from "@/db/schema"
@@ -42,6 +42,10 @@ function serializeArticle(row: {
   readTime: string | null
   isFeatured: boolean
   views: number
+  organizationalUnitId: string | null
+  unitName: string | null
+  deletedAt: Date | null
+  rejectedNote: string | null
 }) {
   return {
     id: row.id,
@@ -61,6 +65,10 @@ function serializeArticle(row: {
     readTime: row.readTime ?? "3 min",
     featured: row.isFeatured,
     views: row.views,
+    organizationalUnitId: row.organizationalUnitId ?? null,
+    unitName: row.unitName ?? null,
+    deletedAt: row.deletedAt?.toISOString() ?? null,
+    rejectedNote: row.rejectedNote ?? null,
   }
 }
 
@@ -108,9 +116,11 @@ export async function GET(request: NextRequest) {
     100,
     Math.max(10, Number.parseInt(request.nextUrl.searchParams.get("limit") ?? "50", 10) || 50),
   )
+  const showDeleted = request.nextUrl.searchParams.get("showDeleted") === "true"
+  const deletedFilter = showDeleted ? isNotNull(articles.deletedAt) : isNull(articles.deletedAt)
   const whereClause = canReadAll
-    ? isNull(articles.deletedAt)
-    : and(isNull(articles.deletedAt), eq(articles.authorId, guard.user!.id))
+    ? deletedFilter
+    : and(deletedFilter, eq(articles.authorId, guard.user!.id))
   const [{ value: total }] = await db
     .select({ value: count() })
     .from(articles)
@@ -134,6 +144,10 @@ export async function GET(request: NextRequest) {
       readTime: articles.readTime,
       isFeatured: articles.isFeatured,
       views: articles.views,
+      organizationalUnitId: articles.organizationalUnitId,
+      unitName: articles.unitName,
+      deletedAt: articles.deletedAt,
+      rejectedNote: articles.rejectedNote,
     })
     .from(articles)
     .leftJoin(articleCategories, eq(articles.categoryId, articleCategories.id))
@@ -201,6 +215,8 @@ export async function POST(request: NextRequest) {
         thumbnailAlt: payload.thumbnailAlt || title,
         readTime: payload.readTime || getArticleReadTime(content),
         isFeatured: Boolean(payload.featured),
+        organizationalUnitId: payload.organizationalUnitId || null,
+        unitName: payload.unitName || null,
         updatedAt: now,
       })
       .where(eq(articles.id, existingArticle.id))
@@ -231,6 +247,8 @@ export async function POST(request: NextRequest) {
       status: "draft",
       authorId: guard.user?.id ?? null,
       authorName: String(payload.author ?? "Tim Media"),
+      organizationalUnitId: payload.organizationalUnitId || null,
+      unitName: payload.unitName || null,
       periodId: activePeriodId,
       thumbnailUrl: payload.thumbnailUrl || payload.image || null,
       thumbnailAlt: payload.thumbnailAlt || title,
@@ -280,8 +298,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  if (existing.status !== "draft" && existing.status !== "rejected") {
-    return NextResponse.json({ error: "Only draft or rejected articles can be edited" }, { status: 409 })
+  if (existing.status !== "draft" && existing.status !== "rejected" && existing.status !== "published") {
+    return NextResponse.json({ error: "Only draft, rejected, or published articles can be edited" }, { status: 409 })
   }
 
   const categoryId = await resolveCategoryId(payload.category)
@@ -303,6 +321,10 @@ export async function PUT(request: NextRequest) {
         thumbnailAlt: payload.thumbnailAlt || title,
         readTime: payload.readTime || getArticleReadTime(content),
         isFeatured: Boolean(payload.featured),
+        organizationalUnitId: payload.organizationalUnitId || null,
+        unitName: payload.unitName || null,
+        status: existing.status === "published" ? "draft" : existing.status,
+        publishedAt: existing.status === "published" ? null : existing.publishedAt,
         rejectedNote: null,
         updatedAt: now,
       })
@@ -374,23 +396,29 @@ export async function PATCH(request: NextRequest) {
     .where(eq(articles.id, id))
     .limit(1)
 
-  if (!article || article.deletedAt) {
+  if (!article) {
     return NextResponse.json({ error: "Article not found" }, { status: 404 })
   }
 
-  if (
-    action === "submit" &&
-    !can(guard.user, "article.read_all") &&
-    article.authorId !== guard.user?.id
-  ) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  if (article.deletedAt) {
+    if (action !== "restore") {
+      return NextResponse.json({ error: "Cannot perform action on deleted article" }, { status: 409 })
+    }
+  } else {
+    if (
+      action === "submit" &&
+      !can(guard.user, "article.read_all") &&
+      article.authorId !== guard.user?.id
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
-  if (!canTransitionArticle(article.status, action)) {
-    return NextResponse.json(
-      { error: `Cannot ${action} article from ${article.status} status` },
-      { status: 409 },
-    )
+    if (!canTransitionArticle(article.status, action)) {
+      return NextResponse.json(
+        { error: `Cannot ${action} article from ${article.status} status` },
+        { status: 409 },
+      )
+    }
   }
 
   if (action === "submit" && (!article.title.trim() || !hasArticleTextContent(article.content))) {
@@ -409,11 +437,14 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Rejected note is required" }, { status: 400 })
   }
 
+  const isDeletedRestore = action === "restore" && article.deletedAt
+
   const updated = await db.transaction(async (tx) => {
     const [result] = await tx
       .update(articles)
       .set({
-        status: nextStatus,
+        status: isDeletedRestore ? "draft" : nextStatus,
+        deletedAt: isDeletedRestore ? null : article.deletedAt,
         reviewerId: action === "approve" || action === "reject" ? guard.user?.id ?? null : article.reviewerId,
         rejectedNote: action === "reject" ? rejectedNote : null,
         publishedAt: action === "approve" ? now : action === "restore" ? null : article.publishedAt,
@@ -423,7 +454,7 @@ export async function PATCH(request: NextRequest) {
         and(
           eq(articles.id, id),
           eq(articles.status, article.status),
-          isNull(articles.deletedAt),
+          isDeletedRestore ? isNotNull(articles.deletedAt) : isNull(articles.deletedAt),
         ),
       )
       .returning()
@@ -441,7 +472,7 @@ export async function PATCH(request: NextRequest) {
       entityId: id,
       metadata: {
         previousStatus: article.status,
-        newStatus: nextStatus,
+        newStatus: isDeletedRestore ? "draft" : nextStatus,
       },
       createdAt: now,
     })
