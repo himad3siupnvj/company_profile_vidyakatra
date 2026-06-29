@@ -54,7 +54,7 @@ export default async function HomePage() {
     <>
       {/* Cabinet Banner — full bleed */}
       <section>
-        <div className="relative aspect-[21/9] overflow-hidden border-b border-border shadow-lg shadow-black/5">
+        <div className="relative mx-auto w-full max-w-7xl aspect-[21/9] overflow-hidden border-b border-border shadow-lg shadow-black/5">
           <Image
             src={homeContent.hero.backgroundImage || kabinetImage}
             alt="Foto kabinet HIMA D3 SI"
