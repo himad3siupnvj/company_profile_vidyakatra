@@ -12,6 +12,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
@@ -86,6 +87,9 @@ export const members = pgTable("members", {
   // jabatan/posisi organisasi (bukan role sistem)
   position: varchar("position", { length: 160 }).notNull(),
   organizationalUnitId: uuid("organizational_unit_id"),  // FK ditambah setelah tabel didefinisikan
+  coreTeamId: uuid("core_team_id").references((): AnyPgColumn => coreTeams.id, {
+    onDelete: "set null",
+  }),
   divisionId: uuid("division_id"),                       // FK ditambah setelah tabel didefinisikan
   periodId: uuid("period_id").references(() => periods.id, {
     onDelete: "set null",
@@ -198,6 +202,42 @@ export const divisions = pgTable("divisions", {
   }),
 });
 
+// ─── Core Teams ──────────────────────────────────────────────────────────────
+// Pengurus inti (BPH, Koordinator) — mirror organizational_units tapi独立.
+
+export const coreTeams = pgTable("core_teams", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  slug: varchar("slug", { length: 80 }).notNull().unique(),
+  name: varchar("name", { length: 160 }).notNull(),
+  type: varchar("type", { length: 60 }).notNull().default("Pengurus Inti"),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  workPrograms: jsonb("work_programs")
+    .$type<Array<{
+      name: string
+      description: string
+      status: "Rutin" | "Berjalan" | "Rencana"
+    }>>()
+    .notNull()
+    .default([]),
+  sortOrder: integer("sort_order").notNull().default(0),
+  periodId: uuid("period_id").references(() => periods.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  deletedBy: uuid("deleted_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+});
+
+// members.core_team_id → core_teams.id (FK dideklarasikan inline di tabel members).
+
 // ─── Article Categories ───────────────────────────────────────────────────────
 
 export const articleCategories = pgTable("article_categories", {
@@ -275,6 +315,7 @@ export const articles = pgTable(
     uniqueIndex("articles_slug_idx").on(table.slug),
     index("articles_public_feed_idx").on(table.status, table.deletedAt, table.publishedAt),
     index("articles_author_idx").on(table.authorId, table.deletedAt, table.updatedAt),
+    index("articles_dashboard_sort_idx").on(table.deletedAt, table.updatedAt),
   ],
 );
 
@@ -352,18 +393,22 @@ export const siteSettings = pgTable("site_settings", {
 //   settings.update
 //   export.data  → metadata: { exportedEntity, format, fileName }
 
-export const auditLogs = pgTable("audit_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  actorId: uuid("actor_id").references(() => users.id, {
-    onDelete: "set null",
-  }),
-  action: varchar("action", { length: 80 }).notNull(),
-  entityType: varchar("entity_type", { length: 80 }),
-  entityId: uuid("entity_id"),
-  // untuk export.data: { exportedEntity, format, fileName }
-  // untuk article events: { previousStatus, newStatus }
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const auditLogs = pgTable(
+  "audit_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorId: uuid("actor_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    action: varchar("action", { length: 80 }).notNull(),
+    entityType: varchar("entity_type", { length: 80 }),
+    entityId: uuid("entity_id"),
+    // untuk export.data: { exportedEntity, format, fileName }
+    // untuk article events: { previousStatus, newStatus }
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index("audit_logs_created_at_idx").on(table.createdAt)],
+);

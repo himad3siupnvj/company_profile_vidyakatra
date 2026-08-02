@@ -1,12 +1,11 @@
 import { and, asc, eq, isNull, ne } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/db"
-import { divisions, members, organizationalUnits, users } from "@/db/schema"
+import { coreTeams, divisions, members, organizationalUnits, users } from "@/db/schema"
 import { requireApiPermission } from "@/lib/api-guard"
 import { writeAuditLog } from "@/lib/audit"
 import { getActivePeriodId } from "@/lib/active-period"
 import { revalidateProfileContent } from "@/lib/profile-cache"
-import { getPublicCoreTeamAssets } from "@/lib/core-team-assets"
 
 export const runtime = "nodejs"
 
@@ -128,7 +127,12 @@ export async function GET() {
   if (guard.response) return guard.response
 
   const db = getDb()
-  const coreTeamAssets = await getPublicCoreTeamAssets()
+
+  const coreTeamRows = await db
+    .select()
+    .from(coreTeams)
+    .where(isNull(coreTeams.deletedAt))
+    .orderBy(asc(coreTeams.sortOrder), asc(coreTeams.id))
 
   const [adminUser] = await db
     .select({ memberId: users.memberId })
@@ -197,7 +201,16 @@ export async function GET() {
     departments: unitSummaries,
     divisions: divisionRows.map(serializeDivision),
     members: memberRows.map(serializeMember),
-    coreTeamAssets,
+    coreTeams: coreTeamRows.map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      type: row.type,
+      description: row.description ?? "",
+      imageUrl: row.imageUrl ?? "",
+      workPrograms: row.workPrograms ?? [],
+      sortOrder: row.sortOrder,
+    })),
   })
 }
 

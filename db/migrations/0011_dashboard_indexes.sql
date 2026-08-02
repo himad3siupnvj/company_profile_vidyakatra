@@ -1,0 +1,2 @@
+CREATE INDEX "articles_dashboard_sort_idx" ON "articles" USING btree ("deleted_at","updated_at");--> statement-breakpoint
+CREATE INDEX "audit_logs_created_at_idx" ON "audit_logs" USING btree ("created_at");

@@ -1,15 +1,9 @@
 import { eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/db"
-import { assets, siteSettings } from "@/db/schema"
+import { assets, coreTeams } from "@/db/schema"
 import { requireApiPermission } from "@/lib/api-guard"
 import { writeAuditLog } from "@/lib/audit"
-import {
-  coreTeamAssetsKey,
-  defaultCoreTeamAssets,
-  normalizeCoreTeamAssets,
-  type CoreTeamAssets,
-} from "@/lib/core-team-assets"
 import { revalidateProfileContent } from "@/lib/profile-cache"
 import {
   createStoragePath,
@@ -24,11 +18,11 @@ export async function POST(request: NextRequest) {
   if (guard.response) return guard.response
 
   const formData = await request.formData()
-  const team = String(formData.get("team") ?? "") as keyof CoreTeamAssets
+  const coreTeamId = String(formData.get("coreTeamId") ?? "")
   const file = formData.get("file")
 
-  if (!["sekretaris", "bendahara", "koordinator"].includes(team)) {
-    return NextResponse.json({ error: "Jenis pengurus inti tidak valid." }, { status: 400 })
+  if (!coreTeamId) {
+    return NextResponse.json({ error: "coreTeamId wajib diisi." }, { status: 400 })
   }
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: "Pilih file gambar." }, { status: 400 })
@@ -41,38 +35,27 @@ export async function POST(request: NextRequest) {
 
   const db = getDb()
   const [existing] = await db
-    .select({ value: siteSettings.value })
-    .from(siteSettings)
-    .where(eq(siteSettings.key, coreTeamAssetsKey))
+    .select()
+    .from(coreTeams)
+    .where(eq(coreTeams.id, coreTeamId))
     .limit(1)
-  const current = existing
-    ? normalizeCoreTeamAssets(existing.value)
-    : defaultCoreTeamAssets
+
+  if (!existing) {
+    return NextResponse.json({ error: "Core team tidak ditemukan." }, { status: 404 })
+  }
+
   const path = createStoragePath(file, "organization-image", {
     category: "core-team",
-    kind: team,
+    kind: existing.slug,
   })
   const url = await uploadFileToStorage(file, path)
-  const updated = { ...current, [team]: url }
   const now = new Date()
 
   await db.transaction(async (tx) => {
     await tx
-      .insert(siteSettings)
-      .values({
-        key: coreTeamAssetsKey,
-        value: updated,
-        updatedAt: now,
-        updatedBy: guard.user?.id,
-      })
-      .onConflictDoUpdate({
-        target: siteSettings.key,
-        set: {
-          value: updated,
-          updatedAt: now,
-          updatedBy: guard.user?.id,
-        },
-      })
+      .update(coreTeams)
+      .set({ imageUrl: url, updatedAt: now })
+      .where(eq(coreTeams.id, coreTeamId))
     await tx.insert(assets).values({
       url,
       fileName: file.name,
@@ -86,10 +69,11 @@ export async function POST(request: NextRequest) {
   await writeAuditLog({
     actorId: guard.user?.id,
     action: "core_team.image.upload",
-    entityType: "site_settings",
-    metadata: { team, url },
+    entityType: "core_team",
+    entityId: coreTeamId,
+    metadata: { slug: existing.slug, url },
   })
   revalidateProfileContent()
 
-  return NextResponse.json({ team, url, coreTeamAssets: updated })
+  return NextResponse.json({ coreTeamId, url })
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "members" ADD CONSTRAINT "members_core_team_id_core_teams_id_fk" FOREIGN KEY ("core_team_id") REFERENCES "public"."core_teams"("id") ON DELETE set null ON UPDATE no action;
