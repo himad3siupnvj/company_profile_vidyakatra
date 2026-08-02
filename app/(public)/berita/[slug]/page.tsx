@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import { Building2, Calendar, Clock, FileText, User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ArticleBackButton } from "@/components/public/article-back-button"
@@ -17,6 +18,19 @@ export function generateStaticParams() {
 }
 
 export const revalidate = 300
+
+export async function generateMetadata({ params }: NewsDetailPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const news = await getPublicNewsBySlug(slug)
+
+  if (!news) return {}
+
+  return {
+    title: news.title,
+    description: news.excerpt,
+    alternates: { canonical: `/berita/${slug}` },
+  }
+}
 
 const categoryLabels = {
   berita: "Berita Acara",
@@ -53,7 +67,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
 
   return (
     <article className="bg-background">
-      <section className="relative overflow-hidden border-b border-border bg-muted/40 py-10 md:py-14">
+      <section className="relative overflow-hidden border-b border-border bg-muted/40 py-8 md:py-10">
         <div className="absolute inset-0 bg-radial-glow opacity-50" />
         <div className="absolute inset-0 bg-grid-pattern-sm" />
 
@@ -79,7 +93,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Publikasi Resmi HIMA D3 SI UPNVJ
             </p>
-            <h1 className="text-4xl font-black leading-tight tracking-tight text-balance md:text-5xl text-gradient">
+            <h1 className="text-3xl font-black leading-tight tracking-tight text-balance md:text-4xl text-gradient">
               {news.title}
             </h1>
             <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">

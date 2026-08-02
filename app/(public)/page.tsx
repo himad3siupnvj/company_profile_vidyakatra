@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import kabinetImage from "@/assets/kabinet.jpg";
 import logoKabinet from "@/assets/logoKabinet.png";
@@ -23,6 +24,10 @@ import {
 import type { PublicNews } from "@/lib/public-content";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: "Beranda",
+};
 
 function getCategoryLabel(category: string) {
   const labels: Record<string, string> = {

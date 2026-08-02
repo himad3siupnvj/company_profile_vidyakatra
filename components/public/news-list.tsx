@@ -39,112 +39,96 @@ export function NewsList({ newsItems }: NewsListProps) {
   function NewsCard({ news, featured = false, styleIdx = 0 }: { news: PublicNews; featured?: boolean; styleIdx?: number }) {
     const style = featured ? 'default' : (styleIdx % 2 === 0 ? 'default' : 'overlay')
 
-    return (
-      <Link href={`/berita/${news.slug}`} className="group h-full">
-        {style === 'overlay' ? (
-          <Card className="relative h-full overflow-hidden border-border/50 bg-card p-0 shadow-soft transition-all group-hover:border-primary/40 group-hover:shadow-glow-primary rounded-[1.25rem]">
-            <div className="relative h-full min-h-[22rem]">
-              <Image
-                src={news.image}
-                alt={news.title}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
-              <CardContent className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end p-5">
-                <div className="mb-2 flex items-center gap-2">
-                  <Badge className="bg-white/20 text-xs capitalize text-white backdrop-blur-sm hover:bg-white/30">
-                    {news.category}
-                  </Badge>
-                  <span className="text-xs text-white/70">{news.date}</span>
-                </div>
-                <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-tight text-white">
-                  {news.title}
-                </h3>
-                <p className="line-clamp-2 text-sm text-white/70">{news.excerpt}</p>
-                <div className="mt-3 flex items-center justify-between text-xs text-white/60">
-                  <span className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {news.author}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {news.readTime}
-                  </span>
-                </div>
-              </CardContent>
-            </div>
-          </Card>
-        ) : (
-          // default style
-          <Card className={cn(
-            "h-full gap-0 overflow-hidden border-border/50 bg-card p-0 shadow-soft transition-all group-hover:border-primary/40 group-hover:shadow-glow-primary rounded-[1.25rem] relative",
-            featured && "sm:grid sm:grid-cols-2 sm:gap-0"
-          )}>
-            <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className={cn("relative overflow-hidden bg-muted", featured ? "aspect-[16/9] sm:aspect-auto sm:h-full" : "aspect-[16/10]")}>
-              <Image
-                src={news.image}
-                alt={news.title}
-                width={featured ? 600 : 400}
-                height={featured ? 340 : 250}
-                sizes={featured ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
-                className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-            </div>
-            <CardContent className={cn("p-4", featured && "flex flex-col justify-center sm:p-6")}>
-              <div className="mb-2 flex items-center gap-2">
-                <Badge className="bg-secondary/20 text-xs capitalize text-secondary hover:bg-secondary/30">
+    if (style === 'overlay') {
+      return (
+        <Link href={`/berita/${news.slug}`} className="group h-full">
+          <Card className="relative h-full min-h-[24rem] overflow-hidden border-border bg-card p-0 shadow-soft transition-all hover:border-primary/50 hover:shadow-glow-primary rounded-[1.25rem]">
+            <Image
+              src={news.image}
+              alt={news.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+            <CardContent className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end p-6">
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <Badge className="bg-white/20 text-xs capitalize text-white backdrop-blur-sm hover:bg-white/30">
                   {news.category}
                 </Badge>
-                <span className="text-xs text-muted-foreground">{news.date}</span>
+                <span className="text-xs text-white/70">{news.date}</span>
               </div>
-              <h3 className={cn("mb-2 font-semibold leading-tight transition-colors group-hover:text-primary", featured ? "line-clamp-3 text-lg" : "line-clamp-2")}>
+              <h3 className="mb-2 line-clamp-2 text-xl font-bold leading-tight text-white">
                 {news.title}
               </h3>
-              <p className={cn("text-sm text-muted-foreground", featured ? "line-clamp-3" : "line-clamp-2")}>{news.excerpt}</p>
-              <div className={"mt-3 flex items-center gap-3 text-xs text-muted-foreground" + (news.unitName ? "" : " hidden")}>
-                <span className="inline-flex items-center gap-1">
-                  <Building2 className="h-3 w-3" />
-                  {news.unitName}
-                </span>
-              </div>
-              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+              <p className="line-clamp-2 text-sm text-white/70">{news.excerpt}</p>
+              <div className="mt-3 flex items-center justify-between text-xs text-white/60">
                 <span className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
+                  <User className="h-3.5 w-3.5" />
                   {news.author}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
+                  <Clock className="h-3.5 w-3.5" />
                   {news.readTime}
                 </span>
               </div>
             </CardContent>
           </Card>
-        )}
+        </Link>
+      )
+    }
+
+    return (
+      <Link href={`/berita/${news.slug}`} className={cn("group h-full min-w-0", featured && "md:col-span-2 lg:col-span-2")}>
+        <Card className={cn(
+          "h-full gap-0 overflow-hidden border-border bg-card p-0 shadow-soft transition-all hover:border-primary/50 hover:shadow-glow-primary rounded-[1.25rem]",
+          featured && "md:grid md:grid-cols-2"
+        )}>
+          <div className={cn("relative overflow-hidden bg-muted", featured ? "aspect-[16/10] md:aspect-auto md:h-full" : "aspect-[16/10]")}>
+            <Image
+              src={news.image}
+              alt={news.title}
+              width={featured ? 800 : 600}
+              height={500}
+              sizes={featured ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"}
+              className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          </div>
+          <CardContent className="flex flex-col justify-center p-6">
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <Badge className="bg-primary/10 text-xs capitalize text-primary hover:bg-primary/20">
+                {news.category}
+              </Badge>
+              <span className="text-xs text-muted-foreground">{news.date}</span>
+            </div>
+            <h3 className={cn("mb-2 font-bold leading-tight text-primary transition-colors", featured ? "text-xl line-clamp-2" : "text-base line-clamp-2")}>
+              {news.title}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2">{news.excerpt}</p>
+            {news.unitName && (
+              <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Building2 className="h-3.5 w-3.5" />
+                {news.unitName}
+              </div>
+            )}
+            <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <User className="h-3.5 w-3.5" />
+                {news.author}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                {news.readTime}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       </Link>
     )
   }
 
   return (
-    <>
-      <section className="border-b border-border/50 bg-muted/40 py-20 md:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-radial-glow opacity-40" />
-        <div className="mx-auto max-w-7xl px-4 md:px-6 relative">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-primary">Publikasi</p>
-            <h1 className="text-4xl font-bold tracking-tight text-balance md:text-5xl text-gradient">
-              Berita dan kegiatan HIMA D3 SI
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-              Dokumentasi kegiatan, prestasi, dan pengumuman terbaru dari organisasi.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y border-border/50 bg-background py-12 md:py-16">
+    <section id="berita-list" className="border-y border-border/50 bg-background py-12 md:py-16">
         <div className="mx-auto max-w-full px-8 md:px-14 lg:px-20">
           <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full md:w-auto">
@@ -180,34 +164,26 @@ export function NewsList({ newsItems }: NewsListProps) {
               <NewsCard news={filteredNews[0]} featured />
             </div>
           ) : filteredNews.length === 2 ? (
-            <div className="grid gap-8 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
               {filteredNews.map((news, idx) => (
-                <NewsCard key={news.id} news={news} featured styleIdx={idx} />
+                <NewsCard key={news.id} news={news} styleIdx={idx} />
               ))}
             </div>
           ) : filteredNews.length === 3 ? (
-            <div className="grid gap-8">
-              <NewsCard news={filteredNews[0]} featured />
-              <div className="grid gap-8 md:grid-cols-2">
-                <NewsCard news={filteredNews[1]} styleIdx={1} />
-                <NewsCard news={filteredNews[2]} styleIdx={2} />
-              </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredNews.map((news, idx) => (
+                <NewsCard key={news.id} news={news} styleIdx={idx} />
+              ))}
             </div>
           ) : (
-            <div className="grid gap-8">
-              <div className="mx-auto w-full max-w-6xl">
-                <NewsCard news={filteredNews[0]} featured />
-              </div>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredNews.slice(1).map((news, idx) => (
-                  <NewsCard key={news.id} news={news} styleIdx={idx + 1} />
-                ))}
-              </div>
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {filteredNews.map((news, idx) => (
+                <NewsCard key={news.id} news={news} featured={idx === 0} styleIdx={idx} />
+              ))}
             </div>
           )}
 
         </div>
       </section>
-    </>
   )
 }

@@ -1,11 +1,13 @@
 import Image, { type StaticImageData } from "next/image"
 import Link from "next/link"
+import type { Metadata } from "next"
 import ketuaLead from "@/assets/lead/sakha-ketum1.jpg"
 import wakilLead from "@/assets/lead/latanza-waketum.jpg"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { getProfileContent } from "@/lib/profile-content"
+import { LandingHero } from "@/components/public/landing-hero"
 import { getPublicWorkUnits } from "@/lib/public-profile"
 import { getPublicCoreTeams } from "@/lib/public-core-team"
 import { getPublicMembers } from "@/lib/public-directory"
@@ -16,6 +18,10 @@ import {
 } from "lucide-react"
 
 export const revalidate = 3600 // Force rebuild to clear cache
+
+export const metadata: Metadata = {
+  title: "Kabinet",
+}
 
 type CabinetLeadPerson = {
   name: string
@@ -112,22 +118,12 @@ export default async function ProfilPage() {
 
   return (
     <>
-      <section className="border-b border-border bg-muted/40 py-20 md:py-28">
-        <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-primary">
-              Profil Kabinet
-            </p>
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl text-balance">
-              {profileContent.intro.cabinetName}
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground uppercase font-semibold tracking-widest text-primary">
-              {profileContent.intro.tagline}
-            </p>
-          </div>
-        </div>
-      </section>
-
+      <LandingHero
+        eyebrow="Profil Kabinet"
+        title={profileContent.intro.cabinetName}
+        description={profileContent.intro.subtitle}
+        contentId="struktur"
+      />
 
       <section id="struktur" className="bg-background py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
@@ -135,7 +131,7 @@ export default async function ProfilPage() {
             <p className="mb-3 text-sm font-medium text-primary">Struktur kabinet</p>
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl text-gradient">Pengurus Inti</h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              Ketua, wakil ketua, koordinator, sekretaris, dan bendahara yang mengawal arah gerak serta tata kelola kabinet.
+              Ketua, koordinator, sekretaris, dan bendahara yang mengawal arah gerak serta tata kelola kabinet.
             </p>
           </div>
 

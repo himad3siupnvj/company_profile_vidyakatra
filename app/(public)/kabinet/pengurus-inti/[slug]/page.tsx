@@ -67,7 +67,7 @@ export default async function CoreTeamDetailPage({ params }: CoreTeamDetailPageP
 
   return (
     <>
-      <section className="border-b border-border bg-muted/40 py-12 md:py-16">
+      <section className="border-b border-border bg-muted/40 py-8 md:py-10">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <Button asChild variant="ghost" className="mb-8 gap-2 pl-0 text-muted-foreground hover:text-primary">
             <Link href="/kabinet#struktur">
@@ -79,10 +79,10 @@ export default async function CoreTeamDetailPage({ params }: CoreTeamDetailPageP
           <div className="grid gap-8 lg:grid-cols-[1fr_18rem] lg:items-center">
             <div>
               <p className="mb-3 text-sm font-medium text-primary">{type}</p>
-              <h1 className="text-4xl font-bold tracking-tight text-balance md:text-5xl">
+              <h1 className="text-3xl font-bold tracking-tight text-balance md:text-4xl text-gradient">
                 {name}
               </h1>
-              <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+              <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground">
                 {description}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
@@ -102,7 +102,6 @@ export default async function CoreTeamDetailPage({ params }: CoreTeamDetailPageP
       {isSekben ? (
         <section className="py-14 md:py-16">
           <div className="mx-auto max-w-7xl px-4 md:px-6">
-            <p className="mb-6 text-3xl font-medium text-primary text-center">Anggota</p>
             <div className="grid gap-x-12 gap-y-12 lg:grid-cols-2">
               <div>
                 <div className="mb-6">
@@ -129,11 +128,8 @@ export default async function CoreTeamDetailPage({ params }: CoreTeamDetailPageP
         teamMembers.length > 0 && (
           <section className="py-14 md:py-16">
             <div className="mx-auto max-w-7xl px-4 md:px-6">
-              <div className="mb-8 flex items-end justify-between gap-4">
-                <div>
-                  <p className="mb-3 text-sm font-medium text-primary">Anggota</p>
-                  <h2 className="text-3xl font-bold tracking-tight">Anggota {name}</h2>
-                </div>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold tracking-tight text-center">Anggota {name}</h2>
               </div>
               <MemberCarousel members={teamMembers} />
             </div>

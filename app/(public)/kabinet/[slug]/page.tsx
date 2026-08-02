@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { ArrowLeft, CheckCircle2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +22,20 @@ export async function generateStaticParams() {
   return workUnits.map((unit) => ({ slug: unit.slug }))
 }
 
+export async function generateMetadata({ params }: UnitDetailPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const workUnits = await getPublicWorkUnits()
+  const unit = workUnits.find((item) => item.slug === slug)
+
+  if (!unit) return {}
+
+  return {
+    title: unit.name,
+    description: unit.description,
+    alternates: { canonical: `/kabinet/${slug}` },
+  }
+}
+
 export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
   const { slug } = await params
   const workUnits = await getPublicWorkUnits()
@@ -33,7 +48,7 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
 
   return (
     <>
-      <section className="border-b border-border bg-muted/40 py-12 md:py-16">
+      <section className="border-b border-border bg-muted/40 py-8 md:py-10">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <Button asChild variant="ghost" className="mb-8 gap-2 pl-0 text-muted-foreground hover:text-primary">
             <Link href="/kabinet#divisi">
@@ -45,10 +60,10 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
           <div className="grid gap-8 lg:grid-cols-[1fr_18rem] lg:items-center">
             <div>
               <p className="mb-3 text-sm font-medium text-primary">{unit.type}</p>
-              <h1 className="text-4xl font-bold tracking-tight text-balance md:text-5xl">
+              <h1 className="text-3xl font-bold tracking-tight text-balance md:text-4xl text-gradient">
                 {unit.name}
               </h1>
-              <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+              <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground">
                 {unit.description}
               </p>
               {/* {unit.programs.length > 0 && (
