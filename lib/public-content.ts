@@ -2,8 +2,8 @@ import type { StaticImageData } from "next/image"
 import type { ArticleDocument } from "@/lib/article-content"
 import ekrafLogo from "@/assets/organ/ekraf.png"
 import humsiwaLogo from "@/assets/organ/humsiwa.png"
-import ketuaLead from "@/assets/lead/sakha-ketum1.png"
-import wakilLead from "@/assets/lead/latanza-waketum.png"
+import ketuaLead from "@/assets/lead/sakha-ketum1.jpg"
+import wakilLead from "@/assets/lead/latanza-waketum.jpg"
 import medkomLogo from "@/assets/organ/medkom.png"
 import pendidikanLogo from "@/assets/organ/pendidikan.png"
 import psdmLogo from "@/assets/organ/psdm.png"
@@ -177,6 +177,44 @@ export const newsData: PublicNews[] = [
     image: "https://images.unsplash.com/photo-1531545514256-b1400bc00f31?w=1200&h=800&fit=crop",
     featured: false,
     unitName: "",
+  },
+  {
+    id: 9,
+    slug: "pelatihan-kepemimpinan-pengurus-hima-2026",
+    title: "Pelatihan Kepemimpinan Pengurus HIMA 2026",
+    excerpt:
+      "Kegiatan upgrading kepemimpinan untuk seluruh pengurus HIMA D3 SI dalam menghadapi tantangan organisasi.",
+    content: [
+      "Pelatihan kepemimpinan ini dirancang untuk membekali pengurus dengan kemampuan komunikasi, pengambilan keputusan, dan manajemen tim.",
+      "Melalui simulasi dan studi kasus, peserta diajak memahami dinamika organisasi dan cara menyelesaikan konflik secara konstruktif.",
+      "Kegiatan ini menjadi fondasi penting untuk menjaga soliditas dan produktivitas kabinet sepanjang masa kepengurusan.",
+    ],
+    date: "8 April 2026",
+    readTime: "4 min",
+    author: "Divisi PSDM",
+    category: "kegiatan",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop",
+    featured: false,
+    unitName: "Departemen PSDM",
+  },
+  {
+    id: 10,
+    slug: "hima-d3-si-gelar-bakti-sosial-di-panti-asuhan",
+    title: "HIMA D3 SI Gelar Bakti Sosial di Panti Asuhan",
+    excerpt:
+      "Kegiatan bakti sosial sebagai wujud kepedulian mahasiswa D3 SI terhadap lingkungan sekitar.",
+    content: [
+      "Bakti sosial menjadi agenda tahunan HIMA D3 SI yang bertujuan menumbuhkan empati dan kepekaan sosial anggota.",
+      "Rangkaian acara meliputi donasi, edukasi teknologi dasar, serta kegiatan interaktif bersama anak-anak di panti asuhan.",
+      "Melalui kegiatan ini, HIMA ingin menunjukkan bahwa mahasiswa tidak hanya unggul secara akademik, tetapi juga peduli terhadap sesama.",
+    ],
+    date: "2 April 2026",
+    readTime: "3 min",
+    author: "Tim Sosial",
+    category: "berita",
+    image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200&h=800&fit=crop",
+    featured: false,
+    unitName: "Biro Sosial Politik",
   },
 ]
 

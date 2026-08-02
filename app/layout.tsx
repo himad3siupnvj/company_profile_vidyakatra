@@ -1,24 +1,14 @@
 import "@/lib/server-polyfill"
 import type { Metadata } from 'next'
-import { Poppins, Inter, Geist_Mono } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { getSiteUrl } from './site-url'
 import './globals.css'
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: '--font-inter'
-})
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: '--font-poppins'
-})
-
-const geistMono = Geist_Mono({ 
-  subsets: ["latin"],
-  variable: '--font-geist-mono'
 })
 
 const siteUrl = getSiteUrl()
@@ -84,7 +74,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className="bg-background">
-      <body className={`${poppins.variable} ${inter.variable} ${geistMono.variable} font-sans font-medium antialiased`}>
+      <body className={`${poppins.variable} font-sans font-medium antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

@@ -37,6 +37,7 @@ function LogoBadge({
         alt={alt}
         width={44}
         height={44}
+        sizes="44px"
         className={cn("h-[82%] w-[82%] object-contain", imageClassName)}
       />
     </div>
@@ -56,8 +57,10 @@ export function Footer({ settings }: { settings: PublicSettings }) {
   ]
 
   return (
-    <footer className="border-t border-border/50 bg-[#1a1a1a]">
-      <div className="mx-auto max-w-7xl px-4 pb-10 pt-8 md:px-6 lg:pb-12 lg:pt-10">
+    <footer className="border-t border-transparent bg-[#1a1a1a] bg-grid-pattern-sm relative">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent pointer-events-none" />
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-8 md:px-6 lg:pb-12 lg:pt-10 relative">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-[1.7fr_0.9fr_0.9fr_1.25fr] lg:gap-5">
           {/* Brand */}
           <div className="space-y-4">
@@ -76,7 +79,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                 <span className="text-xs text-primary">Kabinet Vidyakatra</span>
               </div>
             </Link>
-            {/* <p className="max-w-[19rem] text-sm leading-relaxed text-[#b8b8b8] text-justify">
+            {/* <p className="max-w-[19rem] text-sm leading-relaxed text-white/60 text-justify">
               Himpunan Mahasiswa D3 Sistem Informasi UPN Veteran Jakarta merupakan wadah pengembangan potensi, kreativitas, kepemimpinan, serta kemampuan komunikasi dan kolaborasi mahasiswa.
             </p> */}
             {footerSettings.showSocialMedia && <div className="flex gap-2">
@@ -86,7 +89,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#b8b8b8] transition-all duration-200 hover:scale-105 hover:border-primary/60 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_18px_rgba(245,184,0,0.22)]"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition-all duration-200 hover:scale-105 hover:border-primary/60 hover:bg-primary/10 hover:text-primary hover:shadow-glow-primary"
                   aria-label={social.label}
                 >
                   <social.icon className="h-4 w-4" />
@@ -103,7 +106,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                 <li key={link.id}>
                   <Link
                     href={link.url}
-                    className="text-sm text-[#b8b8b8] transition-colors duration-300 hover:text-primary"
+                    className="text-sm text-white/60 transition-colors duration-300 hover:text-primary"
                   >
                     {link.label}
                   </Link>
@@ -120,7 +123,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-[#b8b8b8] transition-colors duration-300 hover:text-primary"
+                    className="text-sm text-white/60 transition-colors duration-300 hover:text-primary"
                   >
                     {link.label}
                   </Link>
@@ -133,17 +136,17 @@ export function Footer({ settings }: { settings: PublicSettings }) {
           {footerSettings.showContactInfo && <div className="space-y-4">
             <h3 className="font-semibold text-white/90">Kontak</h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-sm text-[#b8b8b8]">
+              <li className="flex items-start gap-3 text-sm text-white/60">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span className="whitespace-pre-line">{contactInfo.address}</span>
               </li>
-              <li className="flex items-center gap-3 text-sm text-[#b8b8b8]">
+              <li className="flex items-center gap-3 text-sm text-white/60">
                 <Mail className="h-4 w-4 shrink-0 text-primary" />
                 <a href={`mailto:${contactInfo.email}`} className="transition-colors duration-300 hover:text-primary">
                   {contactInfo.email}
                 </a>
               </li>
-              <li className="flex items-center gap-3 text-sm text-[#b8b8b8]">
+              <li className="flex items-center gap-3 text-sm text-white/60">
                 <Clock className="h-4 w-4 shrink-0 text-primary" />
                 <span>{contactInfo.officeHours}</span>
               </li>
@@ -153,7 +156,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
 
         {/* Bottom Bar */}
         <div className="mt-10 flex flex-col gap-2 border-t border-border/50 pt-6 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-[#b8b8b8]">
+          <p className="text-sm text-white/60">
             {footerSettings.copyrightText}
           </p>
         </div>

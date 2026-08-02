@@ -37,6 +37,19 @@ export function createFallbackArticleDocument(text: string): ArticleDocument {
   }
 }
 
+export function createEmptyArticleDocument(): ArticleDocument {
+  return {
+    type: "doc",
+    content: [
+      {
+        id: crypto.randomUUID(),
+        type: "paragraph",
+        text: "",
+      },
+    ],
+  }
+}
+
 export function isArticleDocument(value: unknown): value is ArticleDocument {
   if (!value || typeof value !== "object") return false
 

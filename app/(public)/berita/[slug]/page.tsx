@@ -1,4 +1,3 @@
-import Image from "next/image"
 import { notFound } from "next/navigation"
 import { Building2, Calendar, Clock, FileText, User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -55,7 +54,8 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   return (
     <article className="bg-background">
       <section className="relative overflow-hidden border-b border-border bg-muted/40 py-10 md:py-14">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.18)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.18)_1px,transparent_1px)] bg-[size:60px_60px]" />
+        <div className="absolute inset-0 bg-radial-glow opacity-50" />
+        <div className="absolute inset-0 bg-grid-pattern-sm" />
 
         <div className="relative mx-auto max-w-6xl px-4 md:px-6">
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -79,7 +79,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Publikasi Resmi HIMA D3 SI UPNVJ
             </p>
-            <h1 className="text-4xl font-black leading-tight tracking-tight text-balance md:text-5xl">
+            <h1 className="text-4xl font-black leading-tight tracking-tight text-balance md:text-5xl text-gradient">
               {news.title}
             </h1>
             <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
@@ -97,21 +97,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
 
       <section className="py-8 md:py-12">
         <div className="mx-auto max-w-5xl px-4 md:px-6">
-          <figure className="mx-auto max-w-3xl overflow-hidden rounded-md border border-border bg-muted/50 shadow-lg shadow-black/5">
-            <Image
-              src={news.image}
-              alt={news.title}
-              width={1200}
-              height={760}
-              className="aspect-[16/9] w-full object-cover"
-              priority
-            />
-            <figcaption className="border-t border-border bg-card px-4 py-3 text-center text-sm text-muted-foreground">
-              Dokumentasi publikasi: {news.title}
-            </figcaption>
-          </figure>
-
-          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-border bg-card px-5 py-7 shadow-lg shadow-black/5 md:px-8 md:py-10">
+          <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-border/80 bg-card px-5 py-7 shadow-soft md:px-8 md:py-10">
             <ArticleDocumentRenderer document={document} />
           </div>
         </div>

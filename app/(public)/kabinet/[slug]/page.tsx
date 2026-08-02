@@ -62,13 +62,14 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
               )} */}
             </div>
 
-            <div className="mx-auto flex aspect-square w-56 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 p-8">
+            <div className="mx-auto flex aspect-square w-56 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/5 p-8 shadow-soft">
               <Image
                 src={unit.logo}
                 alt={`Logo ${unit.name}`}
                 width={180}
                 height={180}
-                className="h-full w-full object-contain"
+                sizes="224px"
+                className="h-full w-full object-contain transition-transform duration-500 hover:scale-110"
                 priority
               />
             </div>
@@ -105,10 +106,11 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
           {unit.workPrograms.length > 0 ? (
             <div className="grid gap-4 lg:grid-cols-3">
               {unit.workPrograms.map((program) => (
-                <Card key={program.name} className="border-border bg-background shadow-sm">
+                <Card key={program.name} className="border-border/80 bg-background shadow-soft hover:shadow-glow-primary transition-all relative overflow-hidden rounded-[1.25rem]">
+                  <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary/40 via-primary/20 to-transparent" />
                   <CardContent className="p-5">
                     <div className="mb-4 flex items-center justify-between gap-3">
-                      <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                      <div className="rounded-[1rem] bg-gradient-brand p-2.5 text-primary-foreground shadow-glow-primary-sm">
                         <CheckCircle2 className="h-5 w-5" />
                       </div>
                       <Badge variant="secondary">{program.status}</Badge>

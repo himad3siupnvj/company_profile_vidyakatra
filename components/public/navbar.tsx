@@ -60,6 +60,7 @@ function LogoBadge({
         alt={alt}
         width={40}
         height={40}
+        sizes="40px"
         className={cn("h-[82%] w-[82%] object-contain", imageClassName)}
       />
     </div>
@@ -79,7 +80,7 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/70 shadow-soft backdrop-blur-lg supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 md:px-6">
         {/* Logo */}
         <Link href="/" className="group flex min-w-0 items-center gap-2">
@@ -108,7 +109,7 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden min-w-0 items-center justify-end gap-0.5 rounded-full border border-border bg-muted/60 px-1.5 py-1 shadow-sm backdrop-blur-xl md:flex lg:gap-1 lg:px-2">
+        <nav className="hidden min-w-0 items-center justify-end gap-0.5 rounded-full border border-border bg-muted/60 px-1.5 py-1 shadow-sm backdrop-blur-md md:flex lg:gap-1 lg:px-2">
           {navItems.map((item) => {
             const isActive =
               item.href === "/" ? pathname === "/" : pathname === item.href;
@@ -119,9 +120,9 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
                 href={item.href}
                 onClick={() => setIsCollaborateOpen(false)}
                   className={cn(
-                    "whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors duration-200 ease-out lg:px-3 xl:px-4",
+                    "whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm font-medium transition-all duration-200 ease-out lg:px-3 xl:px-4",
                     isActive
-                      ? "bg-primary/10 text-primary shadow-sm"
+                      ? "bg-primary/10 text-primary shadow-glow-primary"
                       : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                   )}
               >
@@ -145,7 +146,7 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
               />
             </button>
             {isCollaborateOpen && (
-              <div className="absolute right-0 top-full mt-3 w-48 overflow-hidden rounded-xl border border-border/50 bg-background p-2 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+              <div className="absolute right-0 top-full mt-3 w-48 overflow-hidden rounded-xl border border-border/40 bg-background p-2 shadow-soft backdrop-blur-lg">
                 {collaborateLinks.map((link) => (
                   <a
                     key={link.label}
@@ -232,7 +233,7 @@ export function Navbar({ socialMedia }: { socialMedia: PublicSocialMedia }) {
                   className={cn(
                     "rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ease-out",
                     isActive
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary shadow-glow-primary"
                       : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                   )}
                         >

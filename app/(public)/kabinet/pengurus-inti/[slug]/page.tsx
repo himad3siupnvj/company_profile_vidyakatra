@@ -92,8 +92,8 @@ export default async function CoreTeamDetailPage({ params }: CoreTeamDetailPageP
               </div>
             </div>
 
-            <div className="mx-auto flex aspect-square w-56 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 p-8">
-              <Image src={logo} alt={name} width={180} height={180} className="h-full w-full object-contain" priority />
+            <div className="mx-auto flex aspect-square w-56 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/5 p-8 shadow-soft">
+              <Image src={logo} alt={name} width={180} height={180} sizes="224px" className="h-full w-full object-contain transition-transform duration-500 hover:scale-110" priority />
             </div>
           </div>
         </div>
