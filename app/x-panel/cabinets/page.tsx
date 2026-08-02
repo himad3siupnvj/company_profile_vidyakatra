@@ -12,6 +12,16 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   defaultProfileContent,
   type ProfileContent,
   type ProfileLeader,
@@ -36,6 +46,7 @@ export default function CabinetsManagement() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState("")
+  const [confirmTarget, setConfirmTarget] = useState<null | { type: "mission" | "value" | "leader"; id: number; label: string }>(null)
 
   useEffect(() => {
     async function loadProfileContent() {
@@ -109,6 +120,30 @@ export default function CabinetsManagement() {
       leaders: current.leaders.filter((leader) => leader.id !== id),
     }))
     setMessage("Leader dihapus dari draft. Klik Save Changes untuk menyimpan.")
+  }
+
+  function removeMission(id: number) {
+    setProfileContent((current) => ({
+      ...current,
+      missions: current.missions.filter((mission) => mission.id !== id),
+    }))
+    setMessage("Misi dihapus dari draft. Klik Save Changes untuk menyimpan.")
+  }
+
+  function removeValue(id: number) {
+    setProfileContent((current) => ({
+      ...current,
+      values: current.values.filter((value) => value.id !== id),
+    }))
+    setMessage("Nilai dihapus dari draft. Klik Save Changes untuk menyimpan.")
+  }
+
+  function handleConfirmDelete() {
+    if (!confirmTarget) return
+    if (confirmTarget.type === "mission") removeMission(confirmTarget.id)
+    if (confirmTarget.type === "value") removeValue(confirmTarget.id)
+    if (confirmTarget.type === "leader") removeLeader(confirmTarget.id)
+    setConfirmTarget(null)
   }
 
   if (isLoading) {
@@ -258,7 +293,7 @@ export default function CabinetsManagement() {
                   <Textarea className="min-h-20 flex-1" value={mission.text} onChange={(event) => updateMission(mission.id, { text: event.target.value })} />
                   <div className="flex shrink-0 items-center gap-2">
                     <Switch checked={mission.enabled} onCheckedChange={(enabled) => updateMission(mission.id, { enabled })} />
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setProfileContent({ ...profileContent, missions: profileContent.missions.filter((item) => item.id !== mission.id) })}>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setConfirmTarget({ type: "mission", id: mission.id, label: mission.text || "Misi ini" })}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -309,7 +344,7 @@ export default function CabinetsManagement() {
                         <Icon className="h-4 w-4" />
                       </div>
                       <Switch checked={value.enabled} onCheckedChange={(enabled) => updateValue(value.id, { enabled })} />
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setProfileContent({ ...profileContent, values: profileContent.values.filter((item) => item.id !== value.id) })}>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setConfirmTarget({ type: "value", id: value.id, label: value.title || "Nilai ini" })}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -357,7 +392,7 @@ export default function CabinetsManagement() {
                     </Select>
                     <Switch checked={leader.enabled} onCheckedChange={(enabled) => updateLeader(leader.id, { enabled })} />
                     <Badge variant={leader.enabled ? "default" : "secondary"}>{leader.enabled ? "Active" : "Hidden"}</Badge>
-                    <Button variant="ghost" size="sm" className="gap-2 text-destructive" onClick={() => removeLeader(leader.id)}>
+                    <Button variant="ghost" size="sm" className="gap-2 text-destructive" onClick={() => setConfirmTarget({ type: "leader", id: leader.id, label: leader.name || "Leader ini" })}>
                       <Trash2 className="h-4 w-4" />
                       Remove
                     </Button>
@@ -373,6 +408,23 @@ export default function CabinetsManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={!!confirmTarget} onOpenChange={(open) => { if (!open) setConfirmTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus item ini?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{confirmTarget?.label}" akan dihapus dari draft. Perubahan baru tersimpan setelah kamu klik Save Changes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-white hover:bg-destructive/90">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
