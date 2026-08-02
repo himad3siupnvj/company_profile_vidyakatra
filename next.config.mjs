@@ -20,7 +20,7 @@ const nextConfig = {
       protocol: "https",
       hostname,
     })),
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
   },
 }
 

@@ -17,3 +17,8 @@ node_modules
 tsconfig.tsbuildinfo
 test-results/
 playwright-report/
+
+# Buku panduan / dokumentasi penggunaan (internal, tidak di-commit)
+docs/BUKU-PANDUAN.md
+docs/HANDOVER.md
+docs/PANDUAN-PENGGUNAAN.md

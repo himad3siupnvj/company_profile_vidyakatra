@@ -73,6 +73,13 @@ users.memberId → members.id
 
 Akun tidak langsung aktif saat dibuat admin. User harus klaim akun sendiri.
 
+> **Catatan V1 (deployment saat ini): single administrator mode.**
+> Pembuatan akun (`POST /api/admin/users`) dan halaman `/claim` dinonaktifkan (return 403).
+> CMS berjalan dengan satu akun administrator. Admin dapat me-reset password user lewat
+> `PATCH /api/admin/users` (`action: "reset_password"`) yang memindahkan user kembali ke status
+> `unclaimed` dengan claim code baru agar user bisa klaim ulang. Fondasi claim system tetap
+> tersedia di schema (`passwordHash` nullable, `claimCode`, status `unclaimed`).
+
 **Flow:**
 ```
 Admin membuat akun (email + claim code)
@@ -334,10 +341,13 @@ published → archived
 
 ## Validasi Basic Sebelum Auto-Publish
 
+> **Catatan implementasi:** validasi saat ini hanya memeriksa `title` dan `content` (via
+> `hasArticleTextContent`). `thumbnailUrl` dan `categoryId` TIDAK diwajibkan sebelum approve;
+> public renderer memiliki fallback (mis. `thumbnail` default `/news/default.jpg`, kategori
+> `uncategorized`). Bila perlu, cek ulang sebelum memperketat.
+
 - `title` tidak kosong
 - `content` tidak kosong
-- `thumbnailUrl` tersedia
-- `categoryId` tersedia
 
 ## Approval Scope
 
@@ -459,6 +469,18 @@ bureau
 ## divisions
 
 Berada di bawah `organizational_units`.
+
+## core_teams
+
+Pengurus inti (BPH, koordinator, dll) yang tidak terikat ke satu unit/departemen.
+Mirror `organizational_units` namun independen.
+
+Fields: `slug`, `name`, `type`, `description`, `imageUrl`, `workPrograms` (JSONB),
+`sortOrder`, `periodId`. Member terhubung lewat `members.coreTeamId` (FK).
+
+- Public renderer membaca `core_teams` dari DB; bila tabel kosong/gagal, fallback ke
+  definisi default di `lib/public-core-team.ts`.
+- Seeding awal: `npm run seed:core-teams` (script di `scripts/seed-core-teams.mjs`).
 
 ---
 

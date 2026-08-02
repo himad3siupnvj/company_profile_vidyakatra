@@ -17,6 +17,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "seed:core-teams": "node scripts/seed-core-teams.mjs",
     "verify": "npm run db:check && npm run lint && npm test && tsc --noEmit && npm run build"
   },
   "dependencies": {
