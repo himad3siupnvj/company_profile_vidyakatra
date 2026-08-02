@@ -12,7 +12,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,13 +50,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { ArticleDocumentRenderer } from "@/components/public/article-document-renderer"
 import {
   createEmptyArticleDocument,
-  NotionArticleEditor,
+  getArticleReadTime,
   type ArticleDocument,
-} from "@/components/admin/notion-article-editor"
-import { ArticleDocumentRenderer } from "@/components/public/article-document-renderer"
-import { getArticleReadTime } from "@/lib/article-content"
+} from "@/lib/article-content"
+import dynamic from "next/dynamic"
 import { optimizeImageForUpload, type ImageProcessingStage } from "@/lib/client-image-processing"
 import {
   articleWorkflowPermissions,
@@ -66,6 +65,17 @@ import {
 } from "@/lib/article-workflow"
 import { useAdminUser } from "@/components/admin/admin-user-context"
 import { hasPermission } from "@/lib/permissions"
+
+const NotionArticleEditor = dynamic(
+  () =>
+    import("@/components/admin/notion-article-editor").then(
+      (module) => module.NotionArticleEditor,
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-64 w-full" />,
+  },
+)
 
 interface Article {
   id: string
@@ -158,6 +168,7 @@ export default function ArticleManagementPage() {
   const [updatingArticleId, setUpdatingArticleId] = useState<string | null>(null)
   const [coverUploadStage, setCoverUploadStage] = useState<ImageProcessingStage>("idle")
   const [isGeneratingSource, setIsGeneratingSource] = useState(false)
+  const [generatedDraftMessage, setGeneratedDraftMessage] = useState("")
   const [isSavingArticle, setIsSavingArticle] = useState(false)
   const [previewArticle, setPreviewArticle] = useState<Article | null>(null)
   const [historyArticle, setHistoryArticle] = useState<Article | null>(null)
@@ -274,6 +285,7 @@ export default function ArticleManagementPage() {
 
     if (!open) {
       resetArticleForm()
+      setGeneratedDraftMessage("")
     }
   }
 
@@ -415,8 +427,22 @@ export default function ArticleManagementPage() {
       }
 
       setArticles((currentArticles) => [data.article, ...currentArticles])
-      setIsCreateArticleOpen(false)
-      resetArticleForm()
+      setEditingArticleId(data.article.id)
+      setNewArticle({
+        title: data.article.title,
+        excerpt: data.article.excerpt ?? "",
+        category: data.article.category,
+        author: data.article.author,
+        thumbnailUrl: data.article.thumbnail === "/news/default.jpg" ? "" : data.article.thumbnail,
+        thumbnailAlt: data.article.thumbnailAlt ?? "",
+        featured: data.article.featured,
+        organizationalUnitId: null,
+        unitName: null,
+      })
+      if (data.article.content) {
+        setArticleContent(data.article.content as ArticleDocument)
+      }
+      setGeneratedDraftMessage(`Draft "${data.article.title}" berhasil dibuat. Anda bisa langsung mengedit atau menutup dialog ini.`)
     } catch {
       setErrorMessage("Generate draft dari source gagal. Coba lagi sebentar.")
     } finally {
@@ -604,13 +630,6 @@ export default function ArticleManagementPage() {
           </DialogHeader>
           {previewArticle && (
             <div className="space-y-6">
-              <div className="overflow-hidden rounded-md border bg-muted">
-                <img
-                  src={previewArticle.thumbnail}
-                  alt={previewArticle.thumbnailAlt}
-                  className="aspect-[16/8] w-full object-cover"
-                />
-              </div>
               {previewArticle.excerpt && (
                 <p className="text-lg leading-8 text-muted-foreground">{previewArticle.excerpt}</p>
               )}
@@ -733,7 +752,7 @@ export default function ArticleManagementPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-4">
             <div className="rounded-lg bg-green-100 p-2">
@@ -824,6 +843,12 @@ export default function ArticleManagementPage() {
                       : "Buat artikel sebagai draft. Publish akan berjalan otomatis setelah approval."}
                   </DialogDescription>
                 </DialogHeader>
+                {generatedDraftMessage && (
+                  <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{generatedDraftMessage}</span>
+                  </div>
+                )}
                 <div className="space-y-4 py-4">
                   <div className="rounded-lg border bg-muted/20 p-4">
                     <div className="mb-4 flex items-start gap-3">
@@ -935,7 +960,7 @@ export default function ArticleManagementPage() {
                       <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
                         <div className="flex aspect-[16/10] items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-muted/50">
                           {newArticle.thumbnailUrl ? (
-                            <img src={newArticle.thumbnailUrl} alt={newArticle.thumbnailAlt || newArticle.title} className="h-full w-full object-cover" />
+                            <img src={newArticle.thumbnailUrl} alt={newArticle.thumbnailAlt || newArticle.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                           ) : (
                             <div className="text-center">
                               <ImagePlus className="mx-auto h-7 w-7 text-muted-foreground" />
@@ -1039,11 +1064,11 @@ export default function ArticleManagementPage() {
               <TableHeader>
                 <TableRow>
                 <TableHead>Artikel</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead>Penulis</TableHead>
-                  <TableHead>Unit</TableHead>
+                  <TableHead className="hidden lg:table-cell">Kategori</TableHead>
+                  <TableHead className="hidden lg:table-cell">Penulis</TableHead>
+                  <TableHead className="hidden xl:table-cell">Unit</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Dilihat</TableHead>
+                  <TableHead className="hidden md:table-cell">Dilihat</TableHead>
                   <TableHead>{filterStatus === "trash" ? "Dihapus" : "Tanggal"}</TableHead>
                   <TableHead className="sticky right-0 w-12 bg-background"></TableHead>
                 </TableRow>
@@ -1052,11 +1077,11 @@ export default function ArticleManagementPage() {
                 {isLoadingArticles ? Array.from({ length: 4 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell><Skeleton className="h-12 w-full" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-6 w-24" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-6 w-28" /></TableCell>
+                    <TableCell className="hidden xl:table-cell"><Skeleton className="h-6 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-12" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                   </TableRow>
@@ -1068,7 +1093,7 @@ export default function ArticleManagementPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-16 overflow-hidden rounded bg-muted">
-                          {article.thumbnail && <img src={article.thumbnail} alt={article.thumbnailAlt} className="h-full w-full object-cover" />}
+                          {article.thumbnail && <img src={article.thumbnail} alt={article.thumbnailAlt} loading="lazy" decoding="async" className="h-full w-full object-cover" />}
                         </div>
                         <div>
                           <p className={`font-medium ${itemIsTrashed ? "line-through text-muted-foreground" : ""}`}>{article.title}</p>
@@ -1076,11 +1101,11 @@ export default function ArticleManagementPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <Badge variant="secondary">{article.categoryLabel ?? article.category}</Badge>
                     </TableCell>
-                    <TableCell>{article.author}</TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="hidden lg:table-cell">{article.author}</TableCell>
+                    <TableCell className="hidden xl:table-cell text-sm">
                       {article.unitName || (article.organizationalUnitId ? orgUnits.find((u) => u.id === article.organizationalUnitId)?.name : null) || <span className="text-muted-foreground/40">&mdash;</span>}
                     </TableCell>
                     <TableCell>
@@ -1093,7 +1118,7 @@ export default function ArticleManagementPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{article.views.toLocaleString()}</TableCell>
+                    <TableCell className="hidden md:table-cell">{article.views.toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {itemIsTrashed
                         ? new Date(article.deletedAt!).toLocaleDateString("id-ID")

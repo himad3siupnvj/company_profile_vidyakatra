@@ -83,8 +83,8 @@ function PersonCard({
     <div
       className={
         featured
-          ? "w-64 rounded-xl border border-primary/40 bg-primary/[0.06] p-4 text-center shadow-sm"
-          : "w-56 rounded-xl border border-border/70 bg-background/70 p-4 text-center shadow-sm"
+          ? "w-full max-w-64 rounded-xl border border-primary/40 bg-primary/[0.06] p-4 text-center shadow-sm"
+          : "w-full max-w-56 rounded-xl border border-border/70 bg-background/70 p-4 text-center shadow-sm"
       }
     >
       <Avatar className={featured ? "mx-auto h-14 w-14" : "mx-auto h-12 w-12"}>
@@ -123,7 +123,7 @@ export function OrganizationChart({ members, units }: OrganizationChartProps) {
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="mx-auto flex min-w-[1320px] max-w-[1500px] flex-col items-center rounded-2xl border border-border/50 bg-background/30 px-8 py-10">
+      <div className="mx-auto flex min-w-[800px] max-w-[1500px] flex-col items-center rounded-2xl border border-border/50 bg-background/30 px-4 py-8 sm:px-8 sm:py-10">
         <div className="mb-5 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Pimpinan Organisasi
@@ -166,8 +166,8 @@ export function OrganizationChart({ members, units }: OrganizationChartProps) {
           </>
         )}
 
-        <div className="h-px w-[calc(100%-12rem)] bg-border" />
-        <div className="grid w-full grid-cols-6 gap-5">
+        <div className="h-px w-[calc(100%-4rem)] bg-border" />
+        <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {units.map((unit) => {
             const unitMembers = members.filter(
               (member) => member.department === unit.name,

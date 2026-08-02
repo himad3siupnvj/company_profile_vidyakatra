@@ -11,7 +11,7 @@ describe("admin access helpers", () => {
 
     expect(staffNav).toContain("Dashboard")
     expect(staffNav).toContain("Berita Acara")
-    expect(getAccessibleAdminNavigation("administrator").map((item) => item.name)).toContain("Cabinets")
+    expect(getAccessibleAdminNavigation("administrator").map((item) => item.name)).toContain("Kabinet")
     expect(staffNav).not.toContain("Settings")
     expect(staffNav).not.toContain("User Management")
   })

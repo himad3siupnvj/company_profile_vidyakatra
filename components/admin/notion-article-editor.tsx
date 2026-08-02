@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { ArticleBlock, ArticleDocument } from "@/lib/article-content"
+import { createEmptyArticleDocument } from "@/lib/article-content"
 import { optimizeImageForUpload, type ImageProcessingStage } from "@/lib/client-image-processing"
 import { cn } from "@/lib/utils"
 
@@ -40,10 +41,6 @@ type NotionArticleEditorProps = {
   previewMeta?: string
   uploadCategory?: string
   uploadKind?: string
-}
-
-export function createEmptyArticleDocument(): ArticleDocument {
-  return { type: "doc", content: [createBlock("paragraph")] }
 }
 
 export function NotionArticleEditor({
@@ -224,7 +221,7 @@ export function NotionArticleEditor({
       </div>
 
       {mode === "edit" ? (
-        <div className="min-h-[420px] px-8 py-8">
+        <div className="min-h-[420px] px-4 py-6 sm:px-8 sm:py-8">
           <div className="mx-auto max-w-3xl space-y-4">
             <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2">
               {commands.map((command) => (
@@ -264,7 +261,7 @@ export function NotionArticleEditor({
               onDragOver={(event) => handleDragOver(event, block.id)}
               onDrop={(event) => handleDrop(event, block.id)}
             >
-              <div className="absolute left-1 top-2 hidden items-center gap-1 group-hover:flex">
+              <div className="absolute left-1 top-2 hidden items-center gap-1 md:group-hover:flex">
                 <Button
                   type="button"
                   variant="ghost"
@@ -293,7 +290,7 @@ export function NotionArticleEditor({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-2 hidden h-7 w-7 text-muted-foreground group-hover:flex"
+                className="absolute right-1 top-2 hidden h-7 w-7 text-muted-foreground md:group-hover:flex"
                 onClick={() => removeBlock(block.id)}
                 aria-label="Remove block"
               >
@@ -330,7 +327,7 @@ export function NotionArticleEditor({
                   <div className="grid gap-3 rounded-md border bg-background/50 p-3 sm:grid-cols-[180px_1fr]">
                     <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-dashed bg-muted/40">
                       {block.url ? (
-                        <img src={block.url} alt={block.alt || block.caption || "Article image preview"} className="h-full w-full object-cover" />
+                        <img src={block.url} alt={block.alt || block.caption || "Article image preview"} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       ) : (
                         <div className="px-4 text-center text-xs text-muted-foreground">
                           <ImagePlus className="mx-auto mb-2 h-6 w-6" />
@@ -395,6 +392,29 @@ export function NotionArticleEditor({
                 />
               )}
 
+              <div className="mt-1 flex items-center gap-1 md:hidden">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground"
+                  onClick={() => addBlockAfter(block.id)}
+                  aria-label="Add block"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground"
+                  onClick={() => removeBlock(block.id)}
+                  aria-label="Remove block"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
               {slashBlockId === block.id && (
                 <div className="mt-2 w-full max-w-sm rounded-lg border bg-popover p-1 shadow-xl">
                   {filteredCommands.length ? filteredCommands.map((command) => (
@@ -457,13 +477,13 @@ export function NotionArticleEditor({
               if (block.type === "image") {
                 return (
                   <figure key={block.id} className="py-2">
-                    {block.url ? <img src={block.url} alt={block.alt} className="aspect-[4/3] w-full object-cover" /> : <div className="border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">Image URL kosong</div>}
+                    {block.url ? <img src={block.url} alt={block.alt} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" /> : <div className="border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">Image URL kosong</div>}
                     {block.caption && <figcaption className="mt-2 text-xs text-slate-500">{block.caption}</figcaption>}
                   </figure>
                 )
               }
 
-              return <p key={block.id}>{block.text}</p>
+              return <p key={block.id} className="text-justify">{block.text}</p>
             })
           ) : (
             <p className="text-slate-500">Preview artikel akan muncul di sini.</p>

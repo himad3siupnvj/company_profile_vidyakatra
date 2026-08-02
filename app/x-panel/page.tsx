@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   ArrowRight,
-  Building2,
   CheckCircle2,
   Clock,
   Eye,
@@ -193,9 +192,6 @@ export default function AdminDashboard() {
   const organizationStats = summary?.stats.organization
   const userStats = summary?.stats.users
   const memberStats = summary?.stats.members
-  const articleWorkflowTotal = articleStats
-    ? articleStats.byStatus.published + articleStats.byStatus.submitted + articleStats.byStatus.draft + articleStats.byStatus.rejected
-    : 0
 
   const statusConfig: Record<string, { label: string; icon: typeof PenLine; color: string }> = {
     draft: { label: "Draft", icon: PenLine, color: "text-muted-foreground" },

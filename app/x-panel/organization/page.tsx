@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Image from "next/image"
 import {
   AlertCircle,
   Building2,
@@ -95,14 +94,16 @@ type WorkProgram = {
   status: "Rutin" | "Berjalan" | "Rencana"
 }
 
-type CoreTeamKey = "sekben" | "koordinator"
-
-type CoreTeamAssets = Record<CoreTeamKey, string>
-
-const coreTeamLabels: Array<{ key: CoreTeamKey; label: string }> = [
-  { key: "sekben", label: "Sekretaris & Bendahara" },
-  { key: "koordinator", label: "Koordinator" },
-]
+interface CoreTeam {
+  id: string
+  slug: string
+  name: string
+  type: string
+  description: string
+  imageUrl: string
+  workPrograms: WorkProgram[]
+  sortOrder: number
+}
 
 interface UnitForm {
   name: string
@@ -163,13 +164,18 @@ export default function OrganizationManagement() {
   const [deletingUnitId, setDeletingUnitId] = useState<string | null>(null)
   const [uploadingUnitId, setUploadingUnitId] = useState<string | null>(null)
   const [deletingMember, setDeletingMember] = useState<Member | null>(null)
-  const [coreTeamAssets, setCoreTeamAssets] = useState<CoreTeamAssets>({
-    sekben: "/placeholder-logo.svg",
-    koordinator: "/placeholder-logo.svg",
-  })
-  const [uploadingCoreTeam, setUploadingCoreTeam] = useState<CoreTeamKey | null>(null)
+  const [coreTeams, setCoreTeams] = useState<CoreTeam[]>([])
+  const [isCoreTeamDialogOpen, setIsCoreTeamDialogOpen] = useState(false)
+  const [editingCoreTeam, setEditingCoreTeam] = useState<CoreTeam | null>(null)
+  const [coreTeamForm, setCoreTeamForm] = useState({ slug: "", name: "", type: "Pengurus Inti", description: "" })
+  const [isSavingCoreTeam, setIsSavingCoreTeam] = useState(false)
+  const [isCoreTeamProgramDialogOpen, setIsCoreTeamProgramDialogOpen] = useState(false)
+  const [coreTeamProgramTarget, setCoreTeamProgramTarget] = useState<CoreTeam | null>(null)
+  const [coreTeamProgramsForm, setCoreTeamProgramsForm] = useState<WorkProgram[]>([])
+  const [isSavingCoreTeamPrograms, setIsSavingCoreTeamPrograms] = useState(false)
+  const [uploadingCoreTeamId, setUploadingCoreTeamId] = useState<string | null>(null)
+  const [deletingCoreTeamId, setDeletingCoreTeamId] = useState<string | null>(null)
   const memberImageInputRef = useRef<HTMLInputElement>(null)
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
   const [newMember, setNewMember] = useState({
     name: "",
     position: "",
@@ -187,7 +193,7 @@ export default function OrganizationManagement() {
       const data = await response.json()
       setMembers(data.members ?? [])
       setUnits(data.organizationalUnits ?? data.departments ?? [])
-      setCoreTeamAssets((current) => data.coreTeamAssets ?? current)
+      setCoreTeams(data.coreTeams ?? [])
     } catch {
       setErrorMessage("Data organisasi belum bisa dimuat. Coba refresh halaman.")
     } finally {
@@ -258,42 +264,6 @@ export default function OrganizationManagement() {
       setErrorMessage(error instanceof Error ? error.message : "Logo gagal diunggah.")
     } finally {
       setUploadingUnitId(null)
-    }
-  }
-
-  const handleCoreTeamImageUpload = async (
-    team: CoreTeamKey,
-    file: File | undefined,
-  ) => {
-    if (!file) return
-
-    setUploadingCoreTeam(team)
-    setErrorMessage("")
-    setSuccessMessage("")
-
-    try {
-      const optimizedFile = await optimizeImageForUpload(file, {
-        maxWidth: 1200,
-        maxHeight: 1200,
-        quality: 0.86,
-      })
-      const formData = new FormData()
-      formData.append("team", team)
-      formData.append("file", optimizedFile)
-
-      const response = await fetch("/api/admin/organization/core-team-image", {
-        method: "POST",
-        body: formData,
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Logo gagal diunggah.")
-
-      setCoreTeamAssets(data.coreTeamAssets)
-      setSuccessMessage(`Logo ${coreTeamLabels.find((item) => item.key === team)?.label} berhasil diperbarui.`)
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Logo gagal diunggah.")
-    } finally {
-      setUploadingCoreTeam(null)
     }
   }
 
@@ -606,6 +576,134 @@ export default function OrganizationManagement() {
     }
   }
 
+  const openCreateCoreTeam = () => {
+    setEditingCoreTeam(null)
+    setCoreTeamForm({ slug: "", name: "", type: "Pengurus Inti", description: "" })
+    setIsCoreTeamDialogOpen(true)
+  }
+
+  const openEditCoreTeam = (ct: CoreTeam) => {
+    setEditingCoreTeam(ct)
+    setCoreTeamForm({ slug: ct.slug, name: ct.name, type: ct.type, description: ct.description })
+    setIsCoreTeamDialogOpen(true)
+  }
+
+  const handleSaveCoreTeam = async () => {
+    if (!coreTeamForm.name.trim() || !coreTeamForm.slug.trim()) {
+      setErrorMessage("Nama dan slug wajib diisi.")
+      return
+    }
+    setIsSavingCoreTeam(true)
+    setErrorMessage("")
+    try {
+      const response = await fetch("/api/admin/organization/core-teams", {
+        method: editingCoreTeam ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingCoreTeam?.id,
+          ...coreTeamForm,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Gagal menyimpan pengurus inti.")
+
+      setCoreTeams((current) =>
+        editingCoreTeam
+          ? current.map((ct) => (ct.id === editingCoreTeam.id ? data.coreTeam : ct))
+          : [...current, data.coreTeam],
+      )
+      setIsCoreTeamDialogOpen(false)
+      setEditingCoreTeam(null)
+      setSuccessMessage(editingCoreTeam ? "Pengurus inti berhasil diperbarui." : "Pengurus inti berhasil ditambahkan.")
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Gagal menyimpan pengurus inti.")
+    } finally {
+      setIsSavingCoreTeam(false)
+    }
+  }
+
+  const handleDeleteCoreTeam = async (ct: CoreTeam) => {
+    if (!window.confirm(`Hapus ${ct.name}?`)) return
+    setDeletingCoreTeamId(ct.id)
+    try {
+      const response = await fetch(`/api/admin/organization/core-teams?id=${ct.id}`, { method: "DELETE" })
+      if (!response.ok) throw new Error("Gagal menghapus.")
+      setCoreTeams((current) => current.filter((t) => t.id !== ct.id))
+      setSuccessMessage(`${ct.name} berhasil dihapus.`)
+    } catch {
+      setErrorMessage("Gagal menghapus pengurus inti.")
+    } finally {
+      setDeletingCoreTeamId(null)
+    }
+  }
+
+  const handleCoreTeamImageUpload = async (ct: CoreTeam, file: File | undefined) => {
+    if (!file) return
+    setUploadingCoreTeamId(ct.id)
+    setErrorMessage("")
+    try {
+      const optimizedFile = await optimizeImageForUpload(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.86 })
+      const formData = new FormData()
+      formData.append("coreTeamId", ct.id)
+      formData.append("files", optimizedFile)
+
+      const response = await fetch("/api/admin/organization/core-teams-image", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Logo gagal diunggah.")
+
+      setCoreTeams((current) => current.map((t) => (t.id === ct.id ? { ...t, imageUrl: data.url } : t)))
+      setSuccessMessage(`Logo ${ct.name} berhasil diperbarui.`)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Logo gagal diunggah.")
+    } finally {
+      setUploadingCoreTeamId(null)
+    }
+  }
+
+  const openCoreTeamPrograms = (ct: CoreTeam) => {
+    setCoreTeamProgramTarget(ct)
+    setCoreTeamProgramsForm(ct.workPrograms)
+    setIsCoreTeamProgramDialogOpen(true)
+  }
+
+  const handleSaveCoreTeamPrograms = async () => {
+    if (!coreTeamProgramTarget) return
+    const workPrograms = coreTeamProgramsForm.map((p) => ({ ...p, name: p.name.trim(), description: p.description.trim() }))
+    if (workPrograms.some((p) => !p.name)) {
+      setErrorMessage("Nama setiap program kerja wajib diisi.")
+      return
+    }
+    setIsSavingCoreTeamPrograms(true)
+    setErrorMessage("")
+    try {
+      const response = await fetch("/api/admin/organization/core-teams", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: coreTeamProgramTarget.id,
+          slug: coreTeamProgramTarget.slug,
+          name: coreTeamProgramTarget.name,
+          type: coreTeamProgramTarget.type,
+          description: coreTeamProgramTarget.description,
+          workPrograms,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Gagal menyimpan program kerja.")
+      setCoreTeams((current) => current.map((ct) => (ct.id === coreTeamProgramTarget.id ? data.coreTeam : ct)))
+      setIsCoreTeamProgramDialogOpen(false)
+      setCoreTeamProgramTarget(null)
+      setSuccessMessage(`Program kerja ${coreTeamProgramTarget.name} berhasil disimpan.`)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Gagal menyimpan program kerja.")
+    } finally {
+      setIsSavingCoreTeamPrograms(false)
+    }
+  }
+
   const departmentCount = units.filter((unit) => unit.type === "department").length
   const bureauCount = units.filter((unit) => unit.type === "bureau").length
 
@@ -860,8 +958,8 @@ export default function OrganizationManagement() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Anggota</TableHead>
-                      <TableHead>Jabatan</TableHead>
-                      <TableHead>Departemen / Biro</TableHead>
+                      <TableHead className="hidden md:table-cell">Jabatan</TableHead>
+                      <TableHead className="hidden lg:table-cell">Departemen / Biro</TableHead>
                       <TableHead className="sticky right-0 w-12 bg-background" />
                     </TableRow>
                   </TableHeader>
@@ -881,8 +979,8 @@ export default function OrganizationManagement() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{member.position}</TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">{member.position}</TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <Badge variant="secondary">{member.department}</Badge>
                         </TableCell>
                         <TableCell className="sticky right-0 bg-background">
@@ -942,71 +1040,115 @@ export default function OrganizationManagement() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Logo Pengurus Inti</CardTitle>
-              <CardDescription>
-                Logo ini tampil pada kartu Sekretaris, Bendahara, dan Koordinator di profil publik.
-              </CardDescription>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Pengurus Inti</CardTitle>
+                  <CardDescription>
+                    Kelola logo, deskripsi, dan program kerja pengurus inti untuk profil publik.
+                  </CardDescription>
+                </div>
+                <Button className="gap-2" onClick={openCreateCoreTeam}>
+                  <Plus className="h-4 w-4" />
+                  Tambah
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2">
-              {coreTeamLabels.map((team) => {
-                const teamMembers = members.filter((m) => {
-                  const pos = m.position.toLowerCase()
-                  return team.key === "sekben"
-                    ? pos.includes("sekretaris") || pos.includes("bendahara")
-                    : pos.includes("koordinator")
-                })
-                return (
-                  <div key={team.key} className="rounded-lg border bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <label className="relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border bg-background p-1.5 hover:bg-accent">
-                        <Image
-                          src={coreTeamAssets[team.key]}
-                          alt=""
-                          width={40}
-                          height={40}
+          </Card>
+
+          {coreTeams.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {coreTeams.map((ct) => (
+                <Card key={ct.id} className="overflow-hidden">
+                  <label className="block cursor-pointer group/logo relative">
+                    {ct.imageUrl ? (
+                      <div className="flex h-32 items-center justify-center border-b bg-muted/30 p-5 transition-opacity group-hover/logo:opacity-70">
+                        <img
+                          src={ct.imageUrl}
+                          alt={`Logo ${ct.name}`}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-contain"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
-                          <ImagePlus className="h-4 w-4 text-white" />
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          className="hidden"
-                          disabled={uploadingCoreTeam !== null}
-                          onChange={(event) => {
-                            void handleCoreTeamImageUpload(team.key, event.target.files?.[0])
-                            event.currentTarget.value = ""
-                          }}
-                        />
-                      </label>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{team.label}</p>
-                        <p className="text-xs text-muted-foreground">{teamMembers.length} anggota</p>
-                      </div>
-                    </div>
-                    {teamMembers.length > 0 && (
-                      <div className="mt-3 space-y-1 border-t pt-3">
-                        {teamMembers.slice(0, 4).map((m) => (
-                          <div key={m.id} className="flex items-center gap-2 text-xs">
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={m.avatar} />
-                              <AvatarFallback className="text-[8px]">{getInitials(m.name)}</AvatarFallback>
-                            </Avatar>
-                            <span className="truncate">{m.name}</span>
-                            <span className="ml-auto shrink-0 text-muted-foreground">{m.position}</span>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
+                            <ImagePlus className="h-3.5 w-3.5" />
+                            {uploadingCoreTeamId === ct.id ? "Mengunggah..." : "Ganti Logo"}
                           </div>
-                        ))}
-                        {teamMembers.length > 4 && (
-                          <p className="text-xs text-muted-foreground">+{teamMembers.length - 4} lainnya</p>
-                        )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex h-32 flex-col items-center justify-center gap-2 border-b bg-muted/10 p-5 transition-colors hover:bg-muted/20">
+                        <ImagePlus className="h-8 w-8 text-muted-foreground/30" />
+                        <span className="text-xs text-muted-foreground/50">
+                          {uploadingCoreTeamId === ct.id ? "Mengunggah..." : "Upload Logo"}
+                        </span>
                       </div>
                     )}
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={uploadingCoreTeamId !== null}
+                      onChange={(event) => {
+                        void handleCoreTeamImageUpload(ct, event.target.files?.[0])
+                        event.currentTarget.value = ""
+                      }}
+                    />
+                  </label>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Badge variant="outline" className="mb-2">{ct.type}</Badge>
+                        <CardTitle className="text-base">{ct.name}</CardTitle>
+                        <CardDescription className="mt-1 line-clamp-2 min-h-8">
+                          {ct.description || "Belum ada deskripsi."}
+                        </CardDescription>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" aria-label={`Aksi untuk ${ct.name}`}>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditCoreTeam(ct)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            disabled={deletingCoreTeamId === ct.id}
+                            onClick={() => handleDeleteCoreTeam(ct)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Hapus
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="border-t pt-4">
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => openCoreTeamPrograms(ct)}
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      Kelola Proker
+                      <Badge variant="secondary" className="ml-auto">
+                        {ct.workPrograms.length}
+                      </Badge>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex min-h-32 flex-col items-center justify-center rounded-md border border-dashed px-6 text-center">
+              <Users className="mb-2 h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Belum ada pengurus inti.</p>
+            </div>
+          )}
 
           {units.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -1018,6 +1160,8 @@ export default function OrganizationManagement() {
                         <img
                           src={unit.imageUrl}
                           alt={`Logo ${unit.name}`}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-contain"
                         />
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity">
@@ -1362,6 +1506,179 @@ export default function OrganizationManagement() {
             </Button>
             <Button onClick={handleSavePrograms} disabled={isSavingPrograms}>
               {isSavingPrograms ? "Menyimpan..." : "Simpan Proker"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isCoreTeamDialogOpen}
+        onOpenChange={(open) => {
+          setIsCoreTeamDialogOpen(open)
+          if (!open) setEditingCoreTeam(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingCoreTeam ? "Edit Pengurus Inti" : "Tambah Pengurus Inti"}</DialogTitle>
+            <DialogDescription>
+              {editingCoreTeam ? "Perbarui informasi pengurus inti." : "Tambahkan pengurus inti baru."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="ct-slug">Slug</Label>
+              <Input
+                id="ct-slug"
+                value={coreTeamForm.slug}
+                onChange={(e) => setCoreTeamForm((f) => ({ ...f, slug: e.target.value }))}
+                placeholder="Contoh: sekben, koordinator"
+                disabled={!!editingCoreTeam}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ct-name">Nama</Label>
+              <Input
+                id="ct-name"
+                value={coreTeamForm.name}
+                onChange={(e) => setCoreTeamForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Contoh: Sekretaris & Bendahara"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ct-type">Tipe</Label>
+              <Input
+                id="ct-type"
+                value={coreTeamForm.type}
+                onChange={(e) => setCoreTeamForm((f) => ({ ...f, type: e.target.value }))}
+                placeholder="Contoh: Pengurus Inti"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ct-description">Deskripsi</Label>
+              <Textarea
+                id="ct-description"
+                rows={3}
+                value={coreTeamForm.description}
+                onChange={(e) => setCoreTeamForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Deskripsi singkat peran pengurus inti ini"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCoreTeamDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleSaveCoreTeam} disabled={isSavingCoreTeam}>
+              {isSavingCoreTeam ? "Menyimpan..." : editingCoreTeam ? "Simpan Perubahan" : "Tambah"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isCoreTeamProgramDialogOpen}
+        onOpenChange={(open) => {
+          setIsCoreTeamProgramDialogOpen(open)
+          if (!open) setCoreTeamProgramTarget(null)
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Kelola Proker {coreTeamProgramTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Daftar program kerja yang tampil pada halaman detail pengurus inti.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {coreTeamProgramsForm.map((program, index) => (
+              <div key={index} className="space-y-4 rounded-lg border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium">Program kerja {index + 1}</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Hapus program kerja ${index + 1}`}
+                    onClick={() => setCoreTeamProgramsForm((c) => c.filter((_, i) => i !== index))}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-[1fr_11rem]">
+                  <div className="space-y-2">
+                    <Label htmlFor={`ct-prog-name-${index}`}>Nama Proker</Label>
+                    <Input
+                      id={`ct-prog-name-${index}`}
+                      value={program.name}
+                      onChange={(e) =>
+                        setCoreTeamProgramsForm((c) =>
+                          c.map((p, i) => (i === index ? { ...p, name: e.target.value } : p)),
+                        )
+                      }
+                      placeholder="Contoh: Study Club"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={program.status}
+                      onValueChange={(value: WorkProgram["status"]) =>
+                        setCoreTeamProgramsForm((c) =>
+                          c.map((p, i) => (i === index ? { ...p, status: value } : p)),
+                        )
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Rutin">Rutin</SelectItem>
+                        <SelectItem value="Berjalan">Berjalan</SelectItem>
+                        <SelectItem value="Rencana">Rencana</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`ct-prog-desc-${index}`}>Deskripsi</Label>
+                  <Textarea
+                    id={`ct-prog-desc-${index}`}
+                    rows={3}
+                    value={program.description}
+                    onChange={(e) =>
+                      setCoreTeamProgramsForm((c) =>
+                        c.map((p, i) => (i === index ? { ...p, description: e.target.value } : p)),
+                      )
+                    }
+                    placeholder="Jelaskan tujuan atau bentuk kegiatan proker"
+                  />
+                </div>
+              </div>
+            ))}
+            {coreTeamProgramsForm.length === 0 && (
+              <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                Belum ada program kerja.
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() =>
+                setCoreTeamProgramsForm((c) => [...c, { name: "", description: "", status: "Rencana" }])
+              }
+            >
+              <Plus className="h-4 w-4" />
+              Tambah Program Kerja
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCoreTeamProgramDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleSaveCoreTeamPrograms} disabled={isSavingCoreTeamPrograms}>
+              {isSavingCoreTeamPrograms ? "Menyimpan..." : "Simpan Proker"}
             </Button>
           </DialogFooter>
         </DialogContent>
